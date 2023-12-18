@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Target Name="ILRepacker" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
+
+        <ItemGroup>
+            <InputAssemblies Include="$(TargetPath)"/>
+            <InputAssemblies Include="$(TargetDir)PInvoke.BCrypt.dll"/>
+            <InputAssemblies Include="$(TargetDir)PInvoke.Kernel32.dll"/>
+            <InputAssemblies Include="$(TargetDir)PInvoke.Windows.Core.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Buffers.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Memory.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Threading.Tasks.Extensions.dll"/>
+        </ItemGroup>
+
+        <ILRepack
+            Parallel="true"
+            Internalize="true"
+            InputAssemblies="@(InputAssemblies)"
+            TargetKind="SameAsPrimaryAssembly"
+            OutputFile="$(TargetPath)"
+    />
+
+    </Target>
+</Project>

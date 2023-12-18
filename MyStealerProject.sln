@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealer", "MyStealer\MyStealer.csproj", "{782757DF-9B6E-4D47-8929-F9AAC4B4F522}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealerToolbox", "MyStealerToolbox\MyStealerToolbox.csproj", "{0D98F428-93CA-4D4C-A948-F948EE98EC3B}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MyStealerShared", "MyStealerShared\MyStealerShared.shproj", "{F96E0557-3BF5-4309-8D6C-7A091CFC0D49}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{782757DF-9B6E-4D47-8929-F9AAC4B4F522}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{782757DF-9B6E-4D47-8929-F9AAC4B4F522}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{782757DF-9B6E-4D47-8929-F9AAC4B4F522}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{782757DF-9B6E-4D47-8929-F9AAC4B4F522}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D98F428-93CA-4D4C-A948-F948EE98EC3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D98F428-93CA-4D4C-A948-F948EE98EC3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D98F428-93CA-4D4C-A948-F948EE98EC3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D98F428-93CA-4D4C-A948-F948EE98EC3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ED738887-9305-4483-AE78-9AEDE378B3AB}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		MyStealerShared\MyStealerShared.projitems*{0d98f428-93ca-4d4c-a948-f948ee98ec3b}*SharedItemsImports = 5
+		MyStealerShared\MyStealerShared.projitems*{782757df-9b6e-4d47-8929-f9aac4b4f522}*SharedItemsImports = 5
+		MyStealerShared\MyStealerShared.projitems*{f96e0557-3bf5-4309-8d6c-7a091cfc0d49}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
