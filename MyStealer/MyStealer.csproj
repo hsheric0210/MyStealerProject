@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -12,14 +12,19 @@
 
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="PInvoke.BCrypt" Version="0.7.124" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyStealer.AntiDebug\MyStealer.AntiDebug.csproj" />
+    <ProjectReference Include="..\MyStealer.Shared\MyStealer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="System.Security" />
   </ItemGroup>
-
-  <Import Project="..\MyStealerShared\MyStealerShared.projitems" Label="Shared" />
 
 </Project>

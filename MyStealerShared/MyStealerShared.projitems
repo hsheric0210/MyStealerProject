@@ -9,6 +9,6 @@
     <Import_RootNamespace>MyStealerShared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\MyStealerShared\Crypt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MyCrypt.cs" />
   </ItemGroup>
 </Project>

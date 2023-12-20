@@ -4,11 +4,18 @@
 
         <ItemGroup>
             <InputAssemblies Include="$(TargetPath)"/>
+            <InputAssemblies Include="$(TargetDir)MyStealer.AntiDebug.dll"/>
+            <InputAssemblies Include="$(TargetDir)MyStealer.Shared.dll"/>
+            <InputAssemblies Include="$(TargetDir)Newtonsoft.Json.dll"/>
             <InputAssemblies Include="$(TargetDir)PInvoke.BCrypt.dll"/>
             <InputAssemblies Include="$(TargetDir)PInvoke.Kernel32.dll"/>
             <InputAssemblies Include="$(TargetDir)PInvoke.Windows.Core.dll"/>
+            <InputAssemblies Include="$(TargetDir)Serilog.dll"/>
+            <InputAssemblies Include="$(TargetDir)Serilog.Sinks.File.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Buffers.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Data.SQLite.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Memory.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Threading.Tasks.Extensions.dll"/>
         </ItemGroup>
