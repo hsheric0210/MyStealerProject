@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System;
-using MyStealer.Collectors.Browser;
 
 namespace MyStealer.Collectors.Browser.ChromiumBased
 {

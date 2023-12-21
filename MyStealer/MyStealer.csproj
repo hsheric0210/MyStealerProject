@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Collectors\MailClient\" />
     <Folder Include="FullDump\" />
   </ItemGroup>
 

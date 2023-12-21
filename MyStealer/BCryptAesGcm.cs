@@ -2,7 +2,6 @@
 using PInvoke;
 using static PInvoke.BCrypt;
 using System.Security.Cryptography;
-using System.Linq;
 
 namespace MyStealer
 {

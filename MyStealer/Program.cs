@@ -1,6 +1,5 @@
 ﻿using MyStealer.Collectors;
 using MyStealer.Collectors.Browser;
-using MyStealer.Modules.Browser.ChromiumBased;
 using Serilog;
 using System;
 using System.Collections.Generic;

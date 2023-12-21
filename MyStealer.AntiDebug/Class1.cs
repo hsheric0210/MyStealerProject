@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyStealer.AntiDebug
+﻿namespace MyStealer.AntiDebug
 {
     public class Class1
     {
