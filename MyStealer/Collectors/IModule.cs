@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyStealer.Modules
+namespace MyStealer.Collectors
 {
     internal interface IModule
     {
         string ApplicationName { get; }
-        bool Check();
+        bool IsAvailable();
         void Initialize();
     }
 }

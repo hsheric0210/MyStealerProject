@@ -1,4 +1,4 @@
-﻿namespace MyStealer.Modules.MailClient
+﻿namespace MyStealer.Collectors.MailClient
 {
     internal class Thunderbird
     {

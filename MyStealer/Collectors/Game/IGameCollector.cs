@@ -1,10 +1,11 @@
-﻿using System;
+﻿using MyStealer.Collectors;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyStealer.Modules.Game
+namespace MyStealer.Collectors.Game
 {
     internal interface IGameCollector : IModule
     {

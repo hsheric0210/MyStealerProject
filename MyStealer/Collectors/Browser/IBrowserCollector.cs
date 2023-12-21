@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MyStealer.Modules.Browser
+namespace MyStealer.Collectors.Browser
 {
     internal interface IBrowserCollector : IModule
     {

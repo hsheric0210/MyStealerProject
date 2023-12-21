@@ -1,4 +1,4 @@
-﻿namespace MyStealer.Modules
+﻿namespace MyStealer.Collectors
 {
     internal struct CredentialEntry
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyStealer.Modules
+namespace MyStealer.Collectors
 {
     internal struct CookieEntry
     {

