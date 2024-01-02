@@ -7,11 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealer", "MyStealer\MySt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealerToolbox", "MyStealerToolbox\MyStealerToolbox.csproj", "{0D98F428-93CA-4D4C-A948-F948EE98EC3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyStealer.AntiDebug", "MyStealer.AntiDebug\MyStealer.AntiDebug.csproj", "{DE750B83-B48F-4BE3-A071-D9207D844F0A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealer.AntiDebug", "MyStealer.AntiDebug\MyStealer.AntiDebug.csproj", "{DE750B83-B48F-4BE3-A071-D9207D844F0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyStealer.Shared", "MyStealer.Shared\MyStealer.Shared.csproj", "{DBA0491D-63B4-4866-9FAB-9E123758C108}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealer.Shared", "MyStealer.Shared\MyStealer.Shared.csproj", "{DBA0491D-63B4-4866-9FAB-9E123758C108}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyStealer.AntiDebug.Native", "MyStealer.AntiDebug.Native\MyStealer.AntiDebug.Native.vcxproj", "{45DA28E6-1147-440F-95F6-8A0065417749}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyStealer.MyShell", "MyStealer.MyShell\MyStealer.MyShell.csproj", "{60C55D63-1FAB-414F-A00C-055A908C4BB4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,6 +85,18 @@ Global
 		{45DA28E6-1147-440F-95F6-8A0065417749}.Release|x64.Build.0 = Release|x64
 		{45DA28E6-1147-440F-95F6-8A0065417749}.Release|x86.ActiveCfg = Release|Win32
 		{45DA28E6-1147-440F-95F6-8A0065417749}.Release|x86.Build.0 = Release|Win32
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Debug|x64.Build.0 = Debug|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Debug|x86.Build.0 = Debug|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Release|x64.ActiveCfg = Release|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Release|x64.Build.0 = Release|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Release|x86.ActiveCfg = Release|Any CPU
+		{60C55D63-1FAB-414F-A00C-055A908C4BB4}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

