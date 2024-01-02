@@ -4,6 +4,7 @@
 
         <ItemGroup>
             <InputAssemblies Include="$(TargetPath)"/>
+            <InputAssemblies Include="$(TargetDir)LevelDB.NET.dll"/>
             <InputAssemblies Include="$(TargetDir)MyStealer.AntiDebug.dll"/>
             <InputAssemblies Include="$(TargetDir)MyStealer.Shared.dll"/>
             <InputAssemblies Include="$(TargetDir)Newtonsoft.Json.dll"/>

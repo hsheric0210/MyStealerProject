@@ -1,6 +1,6 @@
 ﻿namespace MyStealer.Collectors.AccessKey
 {
-    internal class DiscordToken : iaccesskey
+    internal class DiscordToken
     {
     }
 }

