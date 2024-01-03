@@ -7,8 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Collectors\MailClient\" />
-    <Folder Include="Decryptor\" />
+    <Compile Remove="Collectors\MailClient\**" />
+    <Compile Remove="Decryptor\**" />
+    <EmbeddedResource Remove="Collectors\MailClient\**" />
+    <EmbeddedResource Remove="Decryptor\**" />
+    <None Remove="Collectors\MailClient\**" />
+    <None Remove="Decryptor\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="FullDump\" />
   </ItemGroup>
 
