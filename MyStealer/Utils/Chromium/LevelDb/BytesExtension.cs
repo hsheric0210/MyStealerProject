@@ -1,5 +1,4 @@
-﻿using MyStealer.Utils;
-using System;
+﻿using System;
 
 namespace MyStealer.Utils.Chromium.LevelDb
 {

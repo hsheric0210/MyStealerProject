@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MyStealer.MyShell
+﻿namespace MyStealer.MyShell
 {
     public class Class1
     {

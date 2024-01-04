@@ -1,8 +1,5 @@
-﻿using MyStealer.Utils;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 
 namespace MyStealer.Utils.Chromium.LevelDb
@@ -100,31 +97,6 @@ namespace MyStealer.Utils.Chromium.LevelDb
                 throw BufferUnderrunException.StreamUnderrun(length, read);
 
             return buffer;
-        }
-
-        public class BufferUnderrunException : IOException
-        {
-            public int BufferSize { get; }
-            public int ReadSize { get; }
-
-            public BufferUnderrunException() : base()
-            {
-            }
-
-            public BufferUnderrunException(string message) : base(message)
-            {
-            }
-
-            public BufferUnderrunException(string message, int hresult) : base(message, hresult)
-            {
-            }
-
-            public BufferUnderrunException(string message, Exception innerException) : base(message, innerException)
-            {
-            }
-
-            public static BufferUnderrunException StreamUnderrun(int bufferSize, int readSize)
-                => new BufferUnderrunException($"Could not read all data from the stream: expected {bufferSize} bytes, got {readSize} bytes");
         }
     }
 }

