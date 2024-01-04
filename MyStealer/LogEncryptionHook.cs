@@ -1,4 +1,5 @@
-﻿using Serilog.Sinks.File;
+﻿using MyStealer.Shared;
+using Serilog.Sinks.File;
 using System;
 using System.IO;
 using System.Security.Cryptography;

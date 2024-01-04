@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyStealerBuilder
+namespace MyStealerToolbox
 {
     internal class Program
     {

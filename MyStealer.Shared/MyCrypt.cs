@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 
-namespace MyStealer
+namespace MyStealer.Shared
 {
     public static class MyCrypt
     {

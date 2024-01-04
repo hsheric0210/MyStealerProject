@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace MyStealerBuilder
+namespace MyStealerToolbox
 {
     public class CommandOptions
     {

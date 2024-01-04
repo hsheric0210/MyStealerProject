@@ -15,6 +15,7 @@
             <InputAssemblies Include="$(TargetDir)Serilog.Sinks.File.dll"/>
             <InputAssemblies Include="$(TargetDir)Snappy.NET.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Buffers.dll"/>
+            <InputAssemblies Include="$(TargetDir)System.Collections.Immutable.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Data.SQLite.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Memory.dll"/>
             <InputAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll"/>

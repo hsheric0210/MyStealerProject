@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using MyStealer.Shared;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 

