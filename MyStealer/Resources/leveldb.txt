@@ -1,3 +1,0 @@
-Extracted from LevelDB.Standard project
-
-Interop version is 1.22.0.0

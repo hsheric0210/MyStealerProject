@@ -1,6 +1,8 @@
-﻿namespace MyStealer.Collectors
+﻿using System;
+
+namespace MyStealer.Collectors
 {
-    internal interface IModule
+    internal interface IModule : IDisposable
     {
         string ApplicationName { get; }
         bool IsAvailable();

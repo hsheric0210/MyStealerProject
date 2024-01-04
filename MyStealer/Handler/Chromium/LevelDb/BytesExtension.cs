@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Globalization;
 using System.Linq;
 
@@ -61,16 +62,17 @@ namespace MyStealer.Handler.Chromium.LevelDb
             return true;
         }
 
-        public static (byte[], byte[]) Split(this byte[] data, byte pivot, int offset = 0)
+        public static (byte[], byte[]) Split(this byte[] data, byte pivot)
         {
-            var idx = Array.IndexOf(data, pivot, offset);
+            var idx = Array.IndexOf(data, pivot);
             if (idx < 0)
                 return (data, Array.Empty<byte>());
 
-            var first = new byte[idx - offset];
-            var second = new byte[data.Length - idx + 1];
-            Buffer.BlockCopy(data, offset, first, 0, idx);
-            Buffer.BlockCopy(data, idx + 1, second, 0, second.Length);
+            var first = new byte[idx];
+            var second = new byte[data.Length - idx - 1];
+
+            Buffer.BlockCopy(data, 0, first, 0, idx);
+            Buffer.BlockCopy(data, idx+1, second, 0, second.Length);
             return (first, second);
         }
     }

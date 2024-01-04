@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.IO;
 
 namespace MyStealer.Handler.Chromium.LevelDb
@@ -72,6 +73,7 @@ namespace MyStealer.Handler.Chromium.LevelDb
             {
                 //throw new Exception("Buffer Underrun: expected " + length + " got " + read);
                 // todo: debug warning meessage
+                //Log.Warning("Stream buffer underrun! Expected {exp}, got {act}", length, read);
             }
             return buffer;
         }

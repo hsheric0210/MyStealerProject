@@ -72,7 +72,7 @@ public static class CclChromiumLocalStorage
         if (prefix == 0)
             return Encoding.Unicode.GetString(raw, 1, raw.Length - 1);
         else if (prefix == 1)
-            return Encoding.GetEncoding(EIGHT_BIT_ENCODING).GetString(raw, 1, raw.Length - 1);
+            return Encoding.Default.GetString(raw, 1, raw.Length - 1);
         else
             throw new ArgumentException("Unexpected prefix: " + prefix);
     }
@@ -230,8 +230,8 @@ public static class CclChromiumLocalStorage
                 else if (record.user_key[0] == _RECORD_KEY_PREFIX)
                 {
                     // We include deleted records here because we need them to build batches
-                    (var storage_key_raw, var script_key_raw) = record.user_key.Split(0x00, 1);
-                    storage_key = Encoding.GetEncoding(EIGHT_BIT_ENCODING).GetString(storage_key_raw);
+                    (var storage_key_raw, var script_key_raw) = record.user_key.Split(0x00);
+                    storage_key = Encoding.GetEncoding(EIGHT_BIT_ENCODING).GetString(storage_key_raw, 1, storage_key_raw.Length - 1);
 
                     var script_key = decode_string(script_key_raw);
                     try
@@ -346,7 +346,10 @@ public static class CclChromiumLocalStorage
         //         
         public virtual LocalStorageBatch find_batch(ulong seq)
         {
-            var i = _batch_starts.BinarySearch(seq, Comparer<ulong>.Default) - 1; // bisect.bisect_left(_batch_starts, seq) - 1
+            var bin = _batch_starts.BinarySearch(seq, Comparer<ulong>.Default);
+            if (bin < 0)
+                bin = ~bin;
+            var i = bin - 1; // bisect.bisect_left(_batch_starts, seq) - 1
             if (i < 0)
                 return null;
 
