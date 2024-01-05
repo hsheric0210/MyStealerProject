@@ -5,6 +5,7 @@
         <ItemGroup>
             <InputAssemblies Include="$(TargetPath)"/>
             <InputAssemblies Include="$(TargetDir)Crc32C.NET.dll"/>
+            <InputAssemblies Include="$(TargetDir)Gameloop.Vdf.dll"/>
             <InputAssemblies Include="$(TargetDir)MyStealer.AntiDebug.dll"/>
             <InputAssemblies Include="$(TargetDir)MyStealer.Shared.dll"/>
             <InputAssemblies Include="$(TargetDir)Newtonsoft.Json.dll"/>

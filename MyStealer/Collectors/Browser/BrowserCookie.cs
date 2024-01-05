@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace MyStealer.Collectors
+namespace MyStealer.Collectors.Browser
 {
-    internal struct CookieEntry
+    internal struct BrowserCookie
     {
-        public string ApplicationName { get; set; }
-        public string ApplicationProfileName { get; set; }
+        public string BrowserName { get; set; }
+        public string BrowserProfileName { get; set; }
         public DateTime CreationDateTime { get; set; }
         public DateTime LastAccessDateTime { get; set; }
         public DateTime ExpireDateTime { get; set; }
@@ -18,6 +18,6 @@ namespace MyStealer.Collectors
         public int SameSite { get; set; }
         public int Priority { get; set; }
 
-        public override string ToString() => $"Cookie({ApplicationName} - {ApplicationProfileName}){{{Host} : {Path} -> {Name} = {Value}}}";
+        public override string ToString() => $"{nameof(BrowserCookie)}({BrowserName} - {BrowserProfileName}){{{Host} : {Path} -> {Name} = {Value}}}";
     }
 }

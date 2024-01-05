@@ -8,7 +8,7 @@ namespace MyStealer.Utils
     /// </summary>
     internal static class HexString
     {
-        public static string ToHexString(byte[] bytes)
+        public static string BytesToHex(byte[] bytes)
         {
             var hex = new StringBuilder(bytes.Length * 2);
             foreach (var b in bytes)
@@ -16,7 +16,7 @@ namespace MyStealer.Utils
             return hex.ToString();
         }
 
-        public static byte[] FromHexString(string hexString)
+        public static byte[] HexToBytes(string hexString)
         {
             var NumberChars = hexString.Length;
             var bytes = new byte[NumberChars / 2];

