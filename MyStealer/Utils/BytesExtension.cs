@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyStealer.Utils.Chromium.LevelDb
+namespace MyStealer.Utils
 {
     public static class BytesExtension
     {

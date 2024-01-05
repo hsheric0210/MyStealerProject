@@ -21,7 +21,6 @@
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="PInvoke.BCrypt" Version="0.7.124" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
     <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118" />

