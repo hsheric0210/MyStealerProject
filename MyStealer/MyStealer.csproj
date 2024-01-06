@@ -7,31 +7,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Collectors\MailClient\**" />
+    <Compile Remove="Collectors\**" />
     <Compile Remove="Decryptor\**" />
     <Compile Remove="FullDump\**" />
-    <EmbeddedResource Remove="Collectors\MailClient\**" />
+    <EmbeddedResource Remove="Collectors\**" />
     <EmbeddedResource Remove="Decryptor\**" />
     <EmbeddedResource Remove="FullDump\**" />
-    <None Remove="Collectors\MailClient\**" />
+    <None Remove="Collectors\**" />
     <None Remove="Decryptor\**" />
     <None Remove="FullDump\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gameloop.Vdf" Version="0.6.2" />
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.22" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="Snappy.NET" Version="1.1.1.8" />
     <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118" />
     <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="System.Xml.XDocument" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyStealer.AntiDebug\MyStealer.AntiDebug.csproj" />
+    <ProjectReference Include="..\MyStealer.Collector\MyStealer.Collector.csproj" />
     <ProjectReference Include="..\MyStealer.Shared\MyStealer.Shared.csproj" />
   </ItemGroup>
 
@@ -52,10 +48,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Collectors\SysInfo\" />
   </ItemGroup>
 
 </Project>

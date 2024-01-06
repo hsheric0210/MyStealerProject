@@ -1,8 +1,4 @@
-﻿using MyStealer.Collectors.Browser;
-using MyStealer.Collectors.Browser.ChromiumBased;
-using MyStealer.Collectors.Browser.FirefoxBased;
-using MyStealer.Collectors.Game;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
