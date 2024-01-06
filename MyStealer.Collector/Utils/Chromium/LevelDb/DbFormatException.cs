@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MyStealer.Utils.Chromium.LevelDb
+namespace MyStealer.Collector.Utils.Chromium.LevelDb
 {
     public class DbFormatException : IOException
     {

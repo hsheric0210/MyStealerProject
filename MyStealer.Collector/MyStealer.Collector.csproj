@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Collectors\SysInfo\" />
+    <Folder Include="Modules\SysInfo\" />
   </ItemGroup>
 
   <ItemGroup>

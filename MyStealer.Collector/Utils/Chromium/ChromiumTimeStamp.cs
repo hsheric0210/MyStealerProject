@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyStealer.Utils.Chromium
+namespace MyStealer.Collector.Utils.Chromium
 {
     public static class ChromiumTimeStamp
     {

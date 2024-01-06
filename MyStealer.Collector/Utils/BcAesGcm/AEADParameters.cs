@@ -1,6 +1,6 @@
 using System;
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     public class AeadParameters
         : ICipherParameters

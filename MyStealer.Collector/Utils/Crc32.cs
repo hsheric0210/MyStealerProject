@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MyStealer.Utils
+namespace MyStealer.Collector.Utils
 {
     /// <summary>
     /// Performs 32-bit reversed cyclic redundancy checks.
@@ -14,7 +14,7 @@ namespace MyStealer.Utils
         /// <summary>
         /// Generator polynomial (modulo 2) for the reversed CRC32 algorithm. 
         /// </summary>
-        private const UInt32 s_generator = 0xEDB88320;
+        private const uint s_generator = 0xEDB88320;
         #endregion
 
         #region Constructors
@@ -29,9 +29,9 @@ namespace MyStealer.Utils
                 var tableEntry = (uint)i;
                 for (var j = 0; j < 8; ++j)
                 {
-                    tableEntry = ((tableEntry & 1) != 0)
-                        ? (s_generator ^ (tableEntry >> 1))
-                        : (tableEntry >> 1);
+                    tableEntry = (tableEntry & 1) != 0
+                        ? s_generator ^ tableEntry >> 1
+                        : tableEntry >> 1;
                 }
                 return tableEntry;
             }).ToArray();
@@ -44,11 +44,11 @@ namespace MyStealer.Utils
         /// </summary>
         /// <param name="byteStream">The byte stream to calculate the checksum for.</param>
         /// <returns>A 32-bit reversed checksum.</returns>
-        public UInt32 Get<T>(IEnumerable<T> byteStream)
+        public uint Get<T>(IEnumerable<T> byteStream)
         {
             // Initialize checksumRegister to 0xFFFFFFFF and calculate the checksum.
             return ~byteStream.Aggregate(0xFFFFFFFF, (checksumRegister, currentByte) =>
-                      (m_checksumTable[(checksumRegister & 0xFF) ^ Convert.ToByte(currentByte)] ^ (checksumRegister >> 8)));
+                      m_checksumTable[checksumRegister & 0xFF ^ Convert.ToByte(currentByte)] ^ checksumRegister >> 8);
         }
         #endregion
 
@@ -56,7 +56,7 @@ namespace MyStealer.Utils
         /// <summary>
         /// Contains a cache of calculated checksum chunks.
         /// </summary>
-        private readonly UInt32[] m_checksumTable;
+        private readonly uint[] m_checksumTable;
 
         #endregion
     }

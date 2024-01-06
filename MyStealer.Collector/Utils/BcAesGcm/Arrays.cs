@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     /// <summary> General array utilities.</summary>
     public static class Arrays
@@ -25,17 +25,12 @@ namespace MyStealer.Utils.BcAesGcm
             return HaveSameContents(a, b);
         }
 
-#if !(NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER)
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-#endif
         public static bool FixedTimeEquals(byte[] a, byte[] b)
         {
             if (null == a || null == b)
                 return false;
 
-#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-            return CryptographicOperations.FixedTimeEquals(a, b);
-#else
             var len = a.Length;
             if (len != b.Length)
                 return false;
@@ -46,7 +41,6 @@ namespace MyStealer.Utils.BcAesGcm
                 d |= a[i] ^ b[i];
             }
             return 0 == d;
-#endif
         }
 
         private static bool HaveSameContents(

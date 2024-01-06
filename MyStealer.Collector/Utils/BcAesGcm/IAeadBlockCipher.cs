@@ -1,4 +1,4 @@
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     /// <summary>An IAeadCipher based on an IBlockCipher.</summary>
     public interface IAeadBlockCipher

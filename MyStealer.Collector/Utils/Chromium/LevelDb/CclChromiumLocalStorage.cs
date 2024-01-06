@@ -27,8 +27,8 @@ using static CclLevelDb;
 using System.Linq;
 using System.Collections.Immutable;
 using MyStealer.Utils.Chromium.LevelDb;
-using MyStealer.Utils.Chromium;
-using MyStealer.Utils;
+using MyStealer.Collector.Utils;
+using MyStealer.Collector.Utils.Chromium;
 
 /// <summary>
 /// Ported from ccl_leveldb.py using pytocs 2.0.0-3150cbcd42

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace MyStealer.Utils
+namespace MyStealer.Collector.Utils
 {
     /// <summary>
     /// https://stackoverflow.com/a/311179

@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 #endif
 
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     public static class Pack
     {

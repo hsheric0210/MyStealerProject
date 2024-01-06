@@ -3,7 +3,7 @@
 using System.Runtime.CompilerServices;
 #endif
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     public static class Bits
     {

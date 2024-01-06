@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyStealer.Utils
+namespace MyStealer.Collector.Utils
 {
     public static class BytesExtension
     {

