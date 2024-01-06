@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System;
-using Serilog;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Text;
+using MyStealer.Shared;
 
 namespace MyStealer.Decryptor
 {

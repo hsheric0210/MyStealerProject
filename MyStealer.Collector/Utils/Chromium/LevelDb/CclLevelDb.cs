@@ -29,7 +29,6 @@ using System.Text.RegularExpressions;
 using System.Text;
 using Snappy;
 using System.Collections.Immutable;
-using MyStealer.Utils.Chromium.LevelDb;
 using MyStealer.Collector.Utils;
 
 /// <summary>

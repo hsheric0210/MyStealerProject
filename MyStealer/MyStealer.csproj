@@ -1,53 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net462</TargetFramework>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net462</TargetFramework>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
+    <ItemGroup>
+        <Compile Remove="Collectors\**" />
+        <Compile Remove="Decryptor\**" />
+        <Compile Remove="FullDump\**" />
+        <EmbeddedResource Remove="Collectors\**" />
+        <EmbeddedResource Remove="Decryptor\**" />
+        <EmbeddedResource Remove="FullDump\**" />
+        <None Remove="Collectors\**" />
+        <None Remove="Decryptor\**" />
+        <None Remove="FullDump\**" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Collectors\**" />
-    <Compile Remove="Decryptor\**" />
-    <Compile Remove="FullDump\**" />
-    <EmbeddedResource Remove="Collectors\**" />
-    <EmbeddedResource Remove="Decryptor\**" />
-    <EmbeddedResource Remove="FullDump\**" />
-    <None Remove="Collectors\**" />
-    <None Remove="Decryptor\**" />
-    <None Remove="FullDump\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.22" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118" />
+        <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.22" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="Stub.System.Data.SQLite.Core.NetFramework" Version="1.0.118" />
-    <PackageReference Include="System.Collections.Immutable" Version="8.0.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\MyStealer.AntiDebug\MyStealer.AntiDebug.csproj" />
+        <ProjectReference Include="..\MyStealer.Collector\MyStealer.Collector.csproj" />
+        <ProjectReference Include="..\MyStealer.Shared\MyStealer.Shared.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MyStealer.AntiDebug\MyStealer.AntiDebug.csproj" />
-    <ProjectReference Include="..\MyStealer.Collector\MyStealer.Collector.csproj" />
-    <ProjectReference Include="..\MyStealer.Shared\MyStealer.Shared.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Properties\Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="System.Security" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="Properties\Resources.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
 
 </Project>

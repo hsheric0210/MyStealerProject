@@ -1,0 +1,5 @@
+Extracted from System.Data.SQLite project.
+Copyright (C)2004-2008 Hipp, Wyrick & Company, Inc.
+https://www.sqlite.org/copyright.html
+
+Interop version is 1.0.118.0

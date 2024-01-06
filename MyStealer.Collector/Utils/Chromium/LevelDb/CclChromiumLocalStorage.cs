@@ -26,7 +26,6 @@ using System.IO;
 using static CclLevelDb;
 using System.Linq;
 using System.Collections.Immutable;
-using MyStealer.Utils.Chromium.LevelDb;
 using MyStealer.Collector.Utils;
 using MyStealer.Collector.Utils.Chromium;
 
