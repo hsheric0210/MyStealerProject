@@ -4,4 +4,12 @@
     <TargetFramework>net46</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Modules\Files\" />
+    <Folder Include="Modules\Api\" />
+    <Folder Include="Modules\Timing\" />
+    <Folder Include="Modules\Registry\" />
+    <Folder Include="Modules\Process\" />
+  </ItemGroup>
+
 </Project>
