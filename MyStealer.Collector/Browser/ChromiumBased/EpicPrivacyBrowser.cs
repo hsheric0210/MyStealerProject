@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class EpicPrivacyBrowser : Chromium
     {
-        public override string ModuleName => "Epic Privacy Browser";
+        public override string Name => "Epic Privacy Browser";
 
         public override bool HasProfiles => false;
 

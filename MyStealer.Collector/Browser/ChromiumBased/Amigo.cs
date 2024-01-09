@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Amigo : Chromium
     {
-        public override string ModuleName => "Amigo";
+        public override string Name => "Amigo";
 
         public override bool HasProfiles => false;
 

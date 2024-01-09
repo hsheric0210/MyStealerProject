@@ -1,5 +1,4 @@
-﻿using System;
-namespace MyStealer.Collector.Utils.BcAesGcm
+﻿namespace MyStealer.Collector.Utils.BcAesGcm
 {
     public static class Longs
     {

@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Brave : Chromium
     {
-        public override string ModuleName => "Brave";
+        public override string Name => "Brave";
 
         public override bool HasProfiles => false;
 

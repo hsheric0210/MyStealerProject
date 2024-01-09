@@ -13,8 +13,11 @@ namespace MyStealer.Collector.Ip
         };
 
         public IPAddress Address { get; set; }
+
         public string CountryCode { get; set; }
+
         public string RegionName { get; set; }
+
         public string City { get; set; }
     }
 }

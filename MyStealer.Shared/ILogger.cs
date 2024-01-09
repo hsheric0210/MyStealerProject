@@ -17,8 +17,8 @@ using System;
 namespace MyStealer.Shared
 {
     /// <summary>
-    /// Ported from Serilog
-    /// https://github.com/serilog/serilog/blob/dev/src/Serilog/ILogger.cs
+    /// Simple logger abstraction layer.
+    /// Ported from Serilog: https://github.com/serilog/serilog/blob/dev/src/Serilog/ILogger.cs
     /// </summary>
     public interface ILogger
     {

