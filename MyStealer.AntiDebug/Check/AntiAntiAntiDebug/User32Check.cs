@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
+﻿namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
 {
     internal class User32Check : HookCheckBase
     {
         public override string Name => "Hooking: user32";
 
-        protected override string ModuleName => "user32.dll";
+        protected override string DllName => "user32.dll";
 
         protected override string[] ProcNames => new string[]
         {

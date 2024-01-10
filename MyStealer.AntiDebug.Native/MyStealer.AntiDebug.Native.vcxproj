@@ -139,18 +139,47 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="assembler_chk.h" />
+    <ClInclude Include="exception_chk.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="GetProcAddressSilent.h" />
+    <ClInclude Include="hwbrk.h" />
+    <ClInclude Include="memory_chk.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="safe_calls.h" />
     <ClInclude Include="skCrypter.h" />
+    <ClInclude Include="timing_chk.h" />
+    <ClInclude Include="tls.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="assembler_chk.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="exception_chk.cpp" />
+    <ClCompile Include="GetProcAddressSilent.cpp" />
+    <ClCompile Include="hwbrk.cpp" />
+    <ClCompile Include="memory_chk.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="safe_calls.cpp" />
+    <ClCompile Include="timing_chk.cpp" />
+    <ClCompile Include="tls.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="hwbrk.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="assembly_x64.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(VCInstallDir)Tools\MSVC\$(VCToolsVersion)\bin\Hostx64\x64\ml64.exe /c /Cx /coff $(FileName).asm</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(FileName).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(VCInstallDir)Tools\MSVC\$(VCToolsVersion)\bin\Hostx64\x64\ml64.exe /c /Cx /coff $(FileName).asm</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(FileName).obj</Outputs>
+    </CustomBuild>
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

