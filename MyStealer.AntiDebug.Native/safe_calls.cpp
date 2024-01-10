@@ -4,6 +4,7 @@
 #include "GetProcAddressSilent.h"
 
 ULONG_PTR kernel32_addr = NULL;
+ULONG_PTR ntdll_addr = NULL;
 
 TGetProcAddress pfnGetProcAddress = nullptr;
 TGetThreadContext pfnGetThreadContext = nullptr;
@@ -23,6 +24,13 @@ ULONG_PTR findKernel32()
     if (!kernel32_addr)
         kernel32_addr = GetModu1eH4ndle(skCrypt(L"kernel32.dll"));
     return kernel32_addr;
+}
+
+ULONG_PTR findNtdll()
+{
+    if (!ntdll_addr)
+        ntdll_addr = GetModu1eH4ndle(skCrypt(L"ntdll.dll"));
+    return ntdll_addr;
 }
 
 FARPROC safeGetProcAddress(HMODULE hModule, LPCSTR  lpProcName)

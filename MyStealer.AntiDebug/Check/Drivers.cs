@@ -4,6 +4,11 @@ using System.IO;
 
 namespace MyStealer.AntiDebug.Check
 {
+    /// <summary>
+    /// Check if there is any suspicious driver files are found on system directory. (/system32, /system32/drivers)
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiVirtualization.cs#L96
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiVirtualization.cs#L142
+    /// </summary>
     internal class Drivers : CheckBase
     {
         public override string Name => "Drivers";

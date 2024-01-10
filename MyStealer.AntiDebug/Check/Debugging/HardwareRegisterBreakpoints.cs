@@ -3,9 +3,10 @@
 namespace MyStealer.AntiDebug.Check.Debugging
 {
     /// <summary>
-    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs
+    /// Detect hardware breakpoint register values. (DR1 -DR7)
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs#L258
     /// </summary>
-    public class HardwareRegisters : CheckBase
+    public class HardwareRegisterBreakpoints : CheckBase
     {
         public override string Name => "Hardware Register Breakpoints";
 

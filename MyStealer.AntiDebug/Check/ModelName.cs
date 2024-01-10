@@ -3,6 +3,9 @@ using System.Management;
 
 namespace MyStealer.AntiDebug.Check
 {
+    /// <summary>
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiVirtualization.cs#L76
+    /// </summary>
     internal class ModelName : CheckBase
     {
         public override string Name => "Computor Model Name";

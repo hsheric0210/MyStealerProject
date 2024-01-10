@@ -3,7 +3,7 @@
 namespace MyStealer.AntiDebug.Check.Timing
 {
     /// <summary>
-    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs#L224
     /// </summary>
     public class GetTickCountVariance : CheckBase
     {

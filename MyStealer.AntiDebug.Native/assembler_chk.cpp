@@ -4,8 +4,6 @@
 #include "safe_calls.h"
 #include <intrin.h>
 
-// https://github.com/CheckPointSW/showstopper/blob/master/src/not_suspicious/Technique_Assembler.cpp
-
 #ifdef _WIN64
 extern "C" {
     void __int2d_64();
@@ -15,6 +13,9 @@ extern "C" {
 }
 #endif
 
+#pragma region INT3 (__debugbreak())
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L5
 bool asm_int3()
 {
     __try
@@ -30,6 +31,10 @@ bool asm_int3()
     }
 }
 
+#pragma endregion
+
+#pragma region INT3 (long)
+
 #ifndef _WIN64
 bool asm_int3_long_bDebugged = false;
 
@@ -39,10 +44,13 @@ static int int3_long_seh(UINT code, PEXCEPTION_POINTERS ep)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L24
 bool asm_int3_long()
 {
     __try
     {
+        // should we just allocate this to the memory and directly CALL it?
+        // VirtualAlloc -> Write -> convert to function pointer -> execute -> VirtualFree
         __asm {
             __emit(0xCD);
             __emit(0x03);
@@ -54,12 +62,18 @@ bool asm_int3_long()
     }
 }
 #else
+// not available on x64 due to my lack of knowledge on Assembly
 bool asm_int3_long()
 {
     return false;
 }
 #endif
 
+#pragma endregion
+
+#pragma region INT 2D
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L43
 bool asm_int2d()
 {
     __try
@@ -81,6 +95,11 @@ bool asm_int2d()
     }
 }
 
+#pragma endregion
+
+#pragma region ICEPB (INT 1)
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L59
 bool asm_ice()
 {
     __try
@@ -100,6 +119,11 @@ bool asm_ice()
     return false;
 }
 
+#pragma endregion
+
+#pragma region Stack Segment Register
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L73
 bool asm_stack_segment_register()
 {
     bool bTraced = false;
@@ -124,6 +148,11 @@ movss_not_being_debugged:
     return bTraced;
 }
 
+#pragma endregion
+
+#pragma region Instruction Counting
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L130
 
 #ifndef _WIN64 // My lack of knowledge on Assembly language
 __declspec(naked) DWORD WINAPI instruction_counting_proc(LPVOID lpThreadParameter)
@@ -208,6 +237,11 @@ bool asm_instruction_counting()
     return bDebugged;
 }
 
+#pragma endregion
+
+#pragma region Trap and Flag
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L179
 bool asm_popf_and_trap()
 {
     __try
@@ -233,6 +267,11 @@ bool asm_popf_and_trap()
     return false;
 }
 
+#pragma endregion
+
+#pragma region Instruction Prefixes
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L201
 bool asm_instruction_prefixes()
 {
     __try
@@ -256,7 +295,13 @@ bool asm_instruction_prefixes()
     }
 
     return false;
-    }
+}
+
+#pragma endregion
+
+#pragma region Debug Register Manipulation
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Assembler.cpp#L236
 
 static LONG debug_registers_manipulation_seh(PEXCEPTION_POINTERS pExceptionInfo)
 {
@@ -303,6 +348,10 @@ bool asm_debug_registers_modification()
     }
 }
 
+#pragma endregion
+
+#pragma region MOVSS
+
 // https://github.com/HackOvert/AntiDBG/blob/75de1f3d8e7d7488ff2e07244e3abda699d0528b/antidbg/AntiDBG.cpp#L553
 bool asm_movss()
 {
@@ -327,3 +376,5 @@ end:
 #endif
     return false;
 }
+
+#pragma endregion

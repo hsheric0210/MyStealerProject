@@ -13,4 +13,8 @@
       <Reference Include="System.ServiceProcess" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Check\Memory\" />
+    </ItemGroup>
+
 </Project>

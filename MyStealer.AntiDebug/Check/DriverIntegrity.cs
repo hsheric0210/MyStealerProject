@@ -3,6 +3,11 @@ using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check
 {
+    /// <summary>
+    /// Check if unsigned driver is allowed or test-sign mode is enabled.
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/OtherChecks.cs#L20
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/OtherChecks.cs#L36
+    /// </summary>
     internal class DriverIntegrity : CheckBase
     {
         public override string Name => "Driver integrity options";

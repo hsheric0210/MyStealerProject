@@ -5,7 +5,8 @@ using static MyStealer.AntiDebug.NativeCalls;
 namespace MyStealer.AntiDebug.Check.Debugging
 {
     /// <summary>
-    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs
+    /// Use <c>kernel32!NtQueryInformationProcess</c> with <c>PROCESSINFOCLASS.ProcessDebugPort</c> to detect debugger port presence.
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiDebug.cs#L126
     /// </summary>
     public class ProcessDebugPort : CheckBase
     {
@@ -13,8 +14,9 @@ namespace MyStealer.AntiDebug.Check.Debugging
 
         public override bool CheckActive()
         {
+            const uint ProcessDebugPort = 0x7; // https://ntdoc.m417z.com/processinfoclass
             var size = (uint)(sizeof(uint) * (Environment.Is64BitProcess ? 2 : 1));
-            NtQueryInformationProcess_uint(Process.GetCurrentProcess().SafeHandle, 0x7, out var port, size, 0);
+            NtQueryInformationProcess_uint(Process.GetCurrentProcess().SafeHandle, ProcessDebugPort, out var port, size, 0);
             return port != 0;
         }
     }

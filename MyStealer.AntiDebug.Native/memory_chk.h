@@ -40,3 +40,8 @@ bool mem_ntqueryvirtualmemory();
 
 void mem_code_checksum_init();
 bool mem_code_checksum_check();
+
+bool mem_int3scan();
+bool mem_antistepover();
+bool mem_antistepover_file();
+bool mem_antistepover_writeprocessmemory();

@@ -9,8 +9,9 @@ extern "C" {
 }
 #endif
 
-// https://github.com/CheckPointSW/showstopper/blob/master/src/not_suspicious/Technique_Exceptions.cpp
+#pragma region Unhandled Exception SEH
 
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Exceptions.cpp#L4
 bool exc_unhandled_seh()
 {
     __try
@@ -34,6 +35,11 @@ bool exc_unhandled_seh()
     }
 }
 
+#pragma endregion
+
+#pragma region kernel32!RaiseException SEH
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Exceptions.cpp#L18
 bool exc_raiseexception()
 {
     __try
@@ -48,6 +54,10 @@ bool exc_raiseexception()
         return false;
     }
 }
+
+#pragma endregion
+
+#pragma region VEH (Vectorized Error Handler)
 
 static LONG CALLBACK my_veh(PEXCEPTION_POINTERS pExceptionInfo)
 {
@@ -64,6 +74,7 @@ static LONG CALLBACK my_veh(PEXCEPTION_POINTERS pExceptionInfo)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_Exceptions.cpp#L45
 bool exc_veh()
 {
     HANDLE hExeptionHandler = NULL;
@@ -91,15 +102,19 @@ bool exc_veh()
     return bDebugged;
 }
 
+#pragma endregion
+
+#pragma region Trap flag
+
 // https://github.com/LordNoteworthy/al-khaser/blob/master/al-khaser/AntiDebug/TrapFlag.cpp
 
-static BOOL SwallowedException = TRUE;
+static BOOL trap_flag_swallowed_exception = TRUE;
 
 static LONG CALLBACK trap_flag_veh(
     _In_ PEXCEPTION_POINTERS ExceptionInfo
 )
 {
-    SwallowedException = FALSE;
+    trap_flag_swallowed_exception = FALSE;
 
     if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_SINGLE_STEP)
         return EXCEPTION_CONTINUE_EXECUTION;
@@ -107,12 +122,10 @@ static LONG CALLBACK trap_flag_veh(
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-
-
 bool exc_trap_flag()
 {
     PVOID Handle = safeAddVectoredExceptionHandler(1, trap_flag_veh);
-    SwallowedException = TRUE;
+    trap_flag_swallowed_exception = TRUE;
 
 #ifdef _WIN64
     UINT64 eflags = __readeflags();
@@ -125,5 +138,7 @@ bool exc_trap_flag()
     __writeeflags(eflags);
 
     safeRemoveVectoredExceptionHandler(Handle);
-    return SwallowedException;
+    return trap_flag_swallowed_exception;
 }
+
+#pragma endregion

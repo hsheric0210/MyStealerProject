@@ -1,0 +1,51 @@
+c# antidbg impl
+
+/debugflags/CheckRemoteDebuggerPresent
+/debugflags/RtlQueryProcessHeapInformation
+/debugflags/RtlQueryProcessDebugInformation
+/debugflags/BeingDebugged (PEB)
+/debugflags/NtGlobalFlag (PEB)
+/debugflags/HeapFlags (PEB)
+/debugflags/HeapProtection (0xABABABAB or 0xFEEEFEEE)
+
+/directdbginteraction/AntiDebug_BlockInput
+/directdbginteraction/AntiDebug_NtSetInformationThread
+/directdbginteraction/AntiDebug_SuspendThread
+
+/handlesvalidation/OpenProcess
+/handlesvalidation/CreateFile
+/handlesvalidation/LoadLibrary
+/handlesvalidation/NtQueryObject
+
+https://github.com/CheckPointSW/showstopper/blob/master/src/not_suspicious/Technique_MemoryChecks.cpp
+/memorychecks/AntiDebug_MemoryBreakpoints
+/memorychecks/AntiDebug_HardwareBreakpoints
+/memorychecks/AntiDebug_Toolhelp32ReadProcessMemory (_returnaddress)
+/memorychecks/AntiDebug_FunctionPatch
+
+https://github.com/CheckPointSW/showstopper/blob/master/src/not_suspicious/Technique_Misc.cpp
+/misc/AntiDebug_FindWindow
+/misc/AntiDebug_ParentProcessCheck_NtQueryInformationProcess
+/misc/AntiDebug_DbgPrint
+/misc/AntiDebug_DbgSetDebugFilterState
+
+https://github.com/CheckPointSW/showstopper/blob/master/src/not_suspicious/Technique_Timing.h
+/timing/AntiDebug_GetLocalTime
+/timing/AntiDebug_GetSystemTime
+/timing/AntiDebug_QueryPerformanceCounter
+/timing/AntiDebug_timeGetTime
+
+https://github.com/LordNoteworthy/al-khaser/tree/master/al-khaser/AntiDebug
+/antidbg/WriteWatch
+/antidbg/WUDF_IsDebuggerPresent
+/antidbg/SetHandleInformation_API
+/antidbg/SeDebugPrivilege
+/antidbg/ProcessJob
+/antidbg/ProcessHeap_ForceFlags
+/antidbg/ProcessHeap_Flags
+/antidbg/PageExceptionBreakpointCheck
+/antidbg/NtSystemDebugControl
+/antidbg/NtSetInformationThread_ThreadHideFromDebugger
+/antidbg/NtQueryObject_ObjectTypeInformation
+/antidbg/NtQueryObject_AllTypesInformation
+/antidbg/NtGlobalFlag

@@ -2,8 +2,11 @@
 using System.Runtime.InteropServices;
 using static MyStealer.AntiDebug.NativeCalls;
 
-namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
+namespace MyStealer.AntiDebug.Check.AntiHook
 {
+    /// <summary>
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/main/AntiCrack-DotNet/HooksDetection.cs
+    /// </summary>
     internal abstract class HookCheckBase : CheckBase
     {
         protected abstract string DllName { get; }

@@ -3,6 +3,11 @@ using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check
 {
+    /// <summary>
+    /// Detect some sandbox DLLs  loaded in the current process.
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiVirtualization.cs
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/91872f71c5601e4b037b713f31327dfde1662481/AntiCrack-DotNet/AntiVirtualization.cs#L68
+    /// </summary>
     internal class LoadedModules : CheckBase
     {
         public override string Name => "Loaded modules";

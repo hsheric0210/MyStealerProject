@@ -5,6 +5,8 @@ namespace MyStealer.AntiDebug
 {
     internal partial class NativeCalls
     {
+        public const uint STATUS_INFO_LENGTH_MISMATCH = 0xC0000004;
+
         [StructLayout(LayoutKind.Sequential)]
         public struct CONTEXT
         {
@@ -69,11 +71,19 @@ namespace MyStealer.AntiDebug
             public IntPtr Buffer;
         }
 
-        public struct ANSI_STRING
+        [StructLayout(LayoutKind.Sequential)]
+        public struct OBJECT_TYPE_INFORMATION
         {
-            public short Length;
-            public short MaximumLength;
-            public string Buffer;
+            public UNICODE_STRING TypeName;
+            public uint TotalNumberOfHandles;
+            public uint TotalNumberOfObjects;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct OBJECT_ALL_INFORMATION
+        {
+            public uint NumberOfObjects;
+            public OBJECT_TYPE_INFORMATION[] ObjectTypeInformation;
         }
     }
 }

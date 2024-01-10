@@ -26,6 +26,7 @@ bool timing_rdtsc_diff_locky()
     return TRUE;
 }
 
+// https://github.com/LordNoteworthy/al-khaser/blob/0f31a3866bafdfa703d2ed1ee1a242ab31bf5ef0/al-khaser/TimingAttacks/timing.cpp#L189
 bool timing_rdtsc_diff_vmexit()
 {
     const int retry_count = 50;

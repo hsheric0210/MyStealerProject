@@ -3,6 +3,115 @@
 #include "skCrypter.h"
 #include "safe_calls.h"
 #include "GetProcAddressSilent.h"
+#include <intrin.h>
+
+#pragma region INT3 scan 
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_MemoryChecks.cpp#L16
+
+bool mem_int3scan()
+{
+    return int3scan_scan_byte(0xCC, _ReturnAddress(), 1); // 0xCC = INT (Interrupt)
+}
+
+bool int3scan_scan_byte(BYTE cByte, PVOID pMemory, SIZE_T nMemorySize)
+{
+    auto pBytes = (PBYTE)pMemory;
+    for (SIZE_T i = 0; ; i++)
+    {
+        if (((nMemorySize > 0) && (i >= nMemorySize)) // bound check
+            || ((nMemorySize == 0) && (pBytes[i] == 0xC3))) // RETN
+            break;
+
+        if (pBytes[i] == cByte && pBytes[i - 1] != cByte && pBytes[i + 1] != cByte)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+#pragma endregion
+
+#pragma region Anti Step-over (then directly overwrite it with NOP)
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_MemoryChecks.cpp#L45
+
+bool mem_antistepover()
+{
+    PVOID pRetAddress = _ReturnAddress();
+    bool bBpFound = *(PBYTE)pRetAddress == 0xCC; // 0xCC = INT (Interrupt)
+    if (bBpFound)
+    {
+        DWORD dwOldProtect;
+        if (VirtualProtect(pRetAddress, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect))
+        {
+            *(PBYTE)pRetAddress = 0x90; // Replace with 0x90 (NOP)
+            VirtualProtect(pRetAddress, 1, dwOldProtect, &dwOldProtect);
+        }
+    }
+    return bBpFound;
+}
+
+#pragma endregion
+
+#pragma region Anti Step-over (then overwrite with the original Op with ReadFile())
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_MemoryChecks.cpp#L66
+
+bool mem_antistepover_file()
+{
+    PVOID pRetAddress = _ReturnAddress();
+    bool bBpFound = *(PBYTE)pRetAddress == 0xCC; // 0xCC = INT (Interrupt)
+    if (bBpFound)
+    {
+        DWORD dwOldProtect, dwRead;
+        if (VirtualProtect(pRetAddress, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect))
+        {
+            CHAR szFilePath[MAX_PATH];
+            if (GetModuleFileNameA(nullptr, szFilePath, MAX_PATH))
+            {
+                HANDLE hFile = CreateFileA(szFilePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+                if (INVALID_HANDLE_VALUE != hFile)
+                    ReadFile(hFile, pRetAddress, 1, &dwRead, nullptr);
+            }
+            VirtualProtect(pRetAddress, 1, dwOldProtect, &dwOldProtect);
+        }
+    }
+    return bBpFound;
+}
+
+#pragma endregion
+
+#pragma region Anti Step-over (then overwrite with NOP using WriteProcessMemory())
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_MemoryChecks.cpp#L104
+
+const BYTE mem_antistepover_writeprocessmrmory_buffer[] = { 0x90 }; // NOP
+
+bool mem_antistepover_writeprocessmemory()
+{
+    PVOID pRetAddress = _ReturnAddress();
+    bool bBpFound = *(PBYTE)pRetAddress == 0xCC; // 0xCC = INT (Interrupt)
+    if (bBpFound)
+    {
+        DWORD dwOldProtect;
+        if (VirtualProtect(pRetAddress, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect))
+        {
+            WriteProcessMemory(GetCurrentProcess(), pRetAddress, mem_antistepover_writeprocessmrmory_buffer, 1, nullptr);
+            VirtualProtect(pRetAddress, 1, dwOldProtect, &dwOldProtect);
+        }
+    }
+    return bBpFound;
+}
+
+#pragma endregion
+
+#pragma region NtQueryVirtualMemory 
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_MemoryChecks.cpp#L202
+// https://www.virusbulletin.com/virusbulletin/2012/12/journey-sirefef-packer-research-case-study
+// https://waliedassar1.rssing.com/chan-33272685/all_p2.html
 
 bool mem_ntqueryvirtualmemory()
 {
@@ -44,6 +153,12 @@ bool mem_ntqueryvirtualmemory()
 #endif // _WIN64
     return false;
 }
+
+#pragma endregion
+
+#pragma region Code Checksum Test
+
+// https://github.com/CheckPointSW/showstopper/blob/4e6b8dbef35724d7eb987f61cf72dff7a6abfe49/src/not_suspicious/Technique_MemoryChecks.cpp#L411
 
 #ifndef _WIN64
 static __declspec(naked) int code_checksum_test()
@@ -123,6 +238,10 @@ bool mem_code_checksum_check()
 }
 #endif
 
+#pragma endregion
+
+#pragma region Page Guard Violation
+
 // https://github.com/LordNoteworthy/al-khaser/blob/master/al-khaser/AntiDebug/MemoryBreakpoints_PageGuard.cpp
 bool mem_pageguard()
 {
@@ -154,3 +273,5 @@ bool mem_pageguard()
     VirtualFree(pAllocation, 0, MEM_RELEASE);
     return TRUE;
 }
+
+#pragma endregion
