@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check.Exploits

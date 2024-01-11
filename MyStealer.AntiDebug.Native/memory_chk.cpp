@@ -116,7 +116,7 @@ bool mem_antistepover_writeprocessmemory()
 bool mem_ntqueryvirtualmemory()
 {
 #ifndef _WIN64
-    auto pfnNtQueryVirtualMemory = (TNtQueryVirtualMemory)safeGetProcAddress((HMODULE)GetModu1eH4ndle(skCrypt(L"ntdll.dll")), skCrypt("NtQueryVirtualMemory"));
+    auto pfnNtQueryVirtualMemory = (TNtQueryVirtualMemory)GetPr0cAddr3ss(GetModu1eH4ndle(skCrypt(L"ntdll.dll")), skCrypt("NtQueryVirtualMemory"));
 
     NTSTATUS status;
     PBYTE pMem = nullptr;

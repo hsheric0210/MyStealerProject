@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using static MyStealer.AntiDebug.NativeCalls;
 
 namespace MyStealer.AntiDebug.Check.Timing
 {
